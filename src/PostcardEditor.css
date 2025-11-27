@@ -10,12 +10,20 @@
 
 :root {
   --postcard-bg: #ffffff;
+  --stamp-width: 180px;
+  --text-label-font-size: 48px;
 }
 
 .header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
   margin-bottom: 2rem;
   align-self: center;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  gap: 0.25rem;
 }
 
 .header h1 {
@@ -28,9 +36,11 @@
 .header p {
   font-size: 1rem;
   font-weight: 300;
-  width: 35vw;
-  color: rgba(99, 99, 153, 1);
+  width: min(80vw, 560px);
+  color: rgba(126, 126, 190, 1);
   margin: 0;
+  text-align: center;
+  background-color: transparent;
 }
 
 .canvas {
@@ -49,7 +59,7 @@
 
 .postcard-border {
   aspect-ratio: 16 / 10;
-  width: min(90vw, 800px);
+  width: clamp(440px, 90vw, 800px);
   background-image:
     linear-gradient(var(--postcard-bg), var(--postcard-bg)),
     repeating-linear-gradient(
@@ -82,6 +92,7 @@
 .postcard-left {
   flex: 1;
   background: var(--postcard-bg);
+  padding: 32px;
 }
 
 .postcard-divider {
@@ -99,13 +110,26 @@
 }
 
 .stamp-placeholder {
-
-  width: 224px;
-  height: 166px;
+  width: clamp(156px, 22vw, 224px);
+  height: auto;
+  aspect-ratio: 224 / 166;
   align-self: flex-end;
-  /* margin-bottom: 20px; */
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  will-change: opacity;
+}
+
+.stamp-placeholder.animate {
+  animation: stamp-fade 0.35s ease;
+}
+
+@keyframes stamp-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .address-lines {
@@ -113,8 +137,8 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 50px;
-  padding-bottom: 20px;
+  gap: clamp(16px, 3vw, 50px);
+  padding-bottom: clamp(12px, 2.5vw, 20px);
 
 }
 
@@ -126,33 +150,44 @@
 
 .text-label {
   position: absolute;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(126, 126, 190, 0.3);
-  border-radius: 4px;
+  padding: 10px;
   cursor: move;
-  font-size: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-size: var(--text-label-font-size);
   z-index: 10;
+  display: inline-block;
+  width: fit-content;
+}
+
+.text-label span {
+  display: inline-block;
+  line-height: 1.2;
+  white-space: pre;
 }
 
 .text-label:hover {
-  border-color: rgba(126, 126, 190, 0.3);
-  box-shadow: 0 4px 12px rgba(123, 104, 184, 0.2);
+  border-radius: 10px;
+  border: 1px dashed rgba(126, 126, 190, 0.40);
 }
 
 .text-label.selected {
-  border-color: #7b68b8;
-  border-width: 2px;
-  box-shadow: 0 0 0 2px rgba(123, 104, 184, 0.3), 0 4px 12px rgba(123, 104, 184, 0.3);
+  border-radius: 10px;
+  border: 1px dashed rgba(126, 126, 190, 1);
+  box-shadow: 2px 2px 8px rgba(126, 126, 190, 0.15);
 }
 
 .text-input {
   border: none;
   outline: none;
+  width: auto;
   background: transparent;
-  font-size: 16px;
-  min-width: 150px;
+  font-size: var(--text-label-font-size);
+  text-align: center;
+  display: inline-block;
+  line-height: 1.2;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  font-family: inherit;
 }
 
 .mark-wrapper {
@@ -196,8 +231,8 @@
   gap: 2rem;
   justify-content: center;
   align-items: center;
-padding: 0 1rem;
-  height: 66px;
+  padding: 0 1rem;
+  min-height: 66px;
   border-radius: 20px;
   background: #FBFCFF;
   box-shadow: 0 4px 20px 0 rgba(26, 46, 160, 0.10);
@@ -267,24 +302,6 @@ padding: 0 1rem;
   z-index: 20;
 }
 
-.mark-picker {
-  position: relative;
-}
-
-.mark-dropdown {
-  position: absolute;
-  bottom: 110%;
-  left: 50%;
-  transform: translateX(-50%);
-  min-width: 200px;
-  min-height: 32px;
-  background: #FFF;
-  border-radius: 20px;
-  box-shadow: 0 4px 20px 0 rgba(26, 46, 160, 0.10);
-  padding: 0.5rem;
-  z-index: 20;
-}
-
 .font-dropdown-item {
   border: none;
   background: transparent;
@@ -296,7 +313,7 @@ padding: 0 1rem;
   text-align: center;
   justify-content: center;
   align-items: center;
-  transition: background 0.2s ease, border 0.2s ease;
+  transition: background 0.2s ease;
   border: 1px solid transparent;
 }
 
@@ -311,4 +328,43 @@ padding: 0 1rem;
   font-weight: 400;
   line-height: 1.2;
 }
+
+.mark-picker {
+  position: relative;
+}
+
+.stamp-dropdown {
+  display: grid;
+  grid-template-columns: repeat(3, var(--stamp-width));
+  gap: 1rem;
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 220px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px 0 rgba(26, 46, 160, 0.10);
+  padding: 1rem;
+  z-index: 20;
+}
+
+.stamp-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  width: var(--stamp-width);
+  height: calc(var(--stamp-width) * 0.74);
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.stamp-option img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 

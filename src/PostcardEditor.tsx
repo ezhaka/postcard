@@ -4,6 +4,12 @@ import stampEmpty from './assets/stamp-empty.svg'
 import iconToolbarSticker from './assets/icon-toolbar-sticker.svg'
 import iconToolbarStamp from './assets/icon-toolbar-stamp.svg'
 import iconToolbarText from './assets/icon-toolbar-text.svg'
+import stampChoco from './assets/stamps/stamp-choco.svg'
+import stampCloud from './assets/stamps/stamp-cloud.svg'
+import stampForest from './assets/stamps/stamp-forest.svg'
+import stampItaly from './assets/stamps/stamp-italy.svg'
+import stampMountain from './assets/stamps/stamp-mountain.svg'
+import stampPiggy from './assets/stamps/stamp-piggy.svg'
 import './PostcardEditor.css'
 
 interface TextLabel {
@@ -54,6 +60,21 @@ const fontOptions: FontOption[] = [
   { id: 'great-vibes', label: 'Great Vibes', family: 'Great Vibes', sampleText: 'Sending love' }
 ];
 
+interface StampOption {
+  id: string
+  label: string
+  src: string
+}
+
+const stampOptions: StampOption[] = [
+  { id: 'piggy', label: 'Piggy', src: stampPiggy },
+  { id: 'cloud', label: 'Cloud', src: stampCloud },
+  { id: 'choco', label: 'Chocolate', src: stampChoco },
+  { id: 'forest', label: 'Forest', src: stampForest },
+  { id: 'italy', label: 'Italy', src: stampItaly },
+  { id: 'mountain', label: 'Mountain', src: stampMountain }
+];
+
 function PostcardEditor() {
   const [textLabels, setTextLabels] = useState<TextLabel[]>([])
   const [marks, setMarks] = useState<Mark[]>([])
@@ -61,11 +82,14 @@ function PostcardEditor() {
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [selectedWidget, setSelectedWidget] = useState<SelectedWidget | null>(null)
   const [isFontMenuOpen, setFontMenuOpen] = useState(false)
-  const [activeMarkDropdown, setActiveMarkDropdown] = useState<Mark['type'] | null>(null)
+  const [stampDropdownOpen, setStampDropdownOpen] = useState(false)
+  const [stampPlaceholderSrc, setStampPlaceholderSrc] = useState(stampEmpty)
+  const [isStampAnimating, setStampAnimating] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const fontPickerRef = useRef<HTMLDivElement>(null)
-  const markDropdownRef = useRef<HTMLDivElement>(null)
+  const stampButtonRef = useRef<HTMLButtonElement>(null)
+  const stampDropdownRef = useRef<HTMLDivElement>(null)
 
   const addTextLabel = (
     fontFamily = 'Unbounded',
@@ -116,6 +140,19 @@ function PostcardEditor() {
     setFontMenuOpen(false)
   }
 
+  const handleStampSelect = (option: StampOption) => {
+    setStampPlaceholderSrc(option.src)
+    setStampDropdownOpen(false)
+    setSelectedMarkType('sticker')
+  }
+
+  useEffect(() => {
+    const animationDuration = 400
+    setStampAnimating(true)
+    const timeoutId = window.setTimeout(() => setStampAnimating(false), animationDuration)
+    return () => window.clearTimeout(timeoutId)
+  }, [stampPlaceholderSrc])
+
   const handleCanvasDragOver = (event: ReactDragEvent<HTMLDivElement>) => {
     event.preventDefault()
     event.dataTransfer.dropEffect = 'copy'
@@ -146,14 +183,21 @@ function PostcardEditor() {
       if (fontPickerRef.current && !fontPickerRef.current.contains(event.target as Node)) {
         setFontMenuOpen(false)
       }
-      if (markDropdownRef.current && !markDropdownRef.current.contains(event.target as Node)) {
-        setActiveMarkDropdown(null)
+      if (
+        stampDropdownOpen &&
+        stampDropdownRef.current &&
+        !stampDropdownRef.current.contains(event.target as Node) &&
+        stampButtonRef.current &&
+        !stampButtonRef.current.contains(event.target as Node)
+      ) {
+        setStampDropdownOpen(false)
+        setSelectedMarkType('sticker')
       }
     }
 
     window.addEventListener('mousedown', handleClickOutside)
     return () => window.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [stampDropdownOpen])
 
   const handleTextMouseDown = (e: ReactMouseEvent<HTMLDivElement>, label: TextLabel) => {
     if (label.isEditing) return
@@ -312,7 +356,12 @@ function PostcardEditor() {
             <div className="postcard-left" />
             <div className="postcard-divider" />
             <div className="postcard-right">
-              <img src={stampEmpty} alt="Stamp placeholder" className="stamp-placeholder" draggable="false" />
+              <img
+                src={stampPlaceholderSrc}
+                alt="Stamp placeholder"
+                className={`stamp-placeholder ${isStampAnimating ? 'animate' : ''}`}
+                draggable="false"
+              />
               <div className="address-lines">
                 <div className="address-line" />
                 <div className="address-line" />
@@ -345,6 +394,7 @@ function PostcardEditor() {
                 onBlur={() => handleTextBlur(label.id)}
                 className="text-input"
                 style={{ fontFamily: label.fontFamily }}
+                size={Math.max(label.text.length || 1, 1)}
               />
             ) : (
               <span>{label.text}</span>
@@ -369,7 +419,7 @@ function PostcardEditor() {
       </div>
 
       <div className="toolbar">
-          <div className="font-picker" ref={fontPickerRef}>
+        <div className="font-picker" ref={fontPickerRef}>
           <button
             type="button"
             className={`toolbar-button ${isFontMenuOpen ? 'active' : ''}`}
@@ -394,7 +444,7 @@ function PostcardEditor() {
                   onDragStart={(event) => handleFontDragStart(option, event)}
                 >
                   <span className="font-option-name" style={{ fontFamily: option.family }}>
-                    {option.sampleText} 
+                    {option.sampleText}
                   </span>
                 </button>
               ))}
@@ -403,20 +453,35 @@ function PostcardEditor() {
         </div>
         <div className="mark-picker">
           <button
+            ref={stampButtonRef}
             className={`toolbar-button ${selectedMarkType === 'stamp' ? 'active' : ''}`}
             onClick={(event) => {
               event.stopPropagation()
-              setSelectedMarkType('stamp')
-              addMark('stamp')
-              setActiveMarkDropdown(prev => (prev === 'stamp' ? null : 'stamp'))
+              setStampDropdownOpen(prev => {
+                const next = !prev
+                setSelectedMarkType(next ? 'stamp' : 'sticker')
+                return next
+              })
             }}
-            title="Add stamp"
-            aria-label="Add stamp"
+            title="Select stamp"
+            aria-label="Select stamp"
           >
             <img src={iconToolbarStamp} alt="" className="toolbar-icon" />
           </button>
-          {activeMarkDropdown === 'stamp' && (
-            <div className="mark-dropdown" ref={markDropdownRef} aria-hidden="true" />
+          {stampDropdownOpen && (
+            <div className="stamp-dropdown" ref={stampDropdownRef} aria-hidden="true">
+              {stampOptions.map(option => (
+                <button
+                  key={option.id}
+                  type="button"
+                  className="stamp-option"
+                  onClick={() => handleStampSelect(option)}
+                  aria-label={option.label}
+                >
+                  <img src={option.src} alt={option.label} />
+                </button>
+              ))}
+            </div>
           )}
         </div>
         <div className="mark-picker">
@@ -426,16 +491,12 @@ function PostcardEditor() {
               event.stopPropagation()
               setSelectedMarkType('sticker')
               addMark('sticker')
-              setActiveMarkDropdown(prev => (prev === 'sticker' ? null : 'sticker'))
             }}
             title="Add sticker"
             aria-label="Add sticker"
           >
             <img src={iconToolbarSticker} alt="" className="toolbar-icon" />
           </button>
-          {activeMarkDropdown === 'sticker' && (
-            <div className="mark-dropdown" ref={markDropdownRef} aria-hidden="true" />
-          )}
         </div>
       </div>
     </div>
