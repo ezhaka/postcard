@@ -260,7 +260,6 @@ padding: 0 1rem;
   min-width: 220px;
   background: white;
   border-radius: 20px;
-  background: #FFF;
   box-shadow: 0 4px 20px 0 rgba(26, 46, 160, 0.10);
   display: flex;
   flex-direction: row;
@@ -297,7 +296,7 @@ padding: 0 1rem;
   text-align: center;
   justify-content: center;
   align-items: center;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, border 0.2s ease;
   border: 1px solid transparent;
 }
 
