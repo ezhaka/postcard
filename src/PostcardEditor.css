@@ -2,9 +2,14 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  width: 100vw;
   background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
   padding: 2rem;
   box-sizing: border-box;
+}
+
+:root {
+  --postcard-bg: #ffffff;
 }
 
 .header {
@@ -14,14 +19,14 @@
 
 .header h1 {
   font-size: 3rem;
-  color: #7b68b8;
+  color: rgba(126, 126, 190, 1);
   margin: 0 0 0.5rem 0;
   font-weight: 700;
 }
 
 .header p {
   font-size: 1rem;
-  color: #666;
+  color: rgba(99, 99, 153, 1);
   margin: 0;
 }
 
@@ -31,27 +36,37 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
   margin-bottom: 2rem;
   cursor: default;
   user-select: none;
+  
+
 }
 
 .postcard-border {
-  width: 800px;
-  height: 500px;
-  background: white;
-  border: 12px solid transparent;
-  border-image: repeating-linear-gradient(
-    45deg,
-    #ff9eb5,
-    #ff9eb5 10px,
-    #b3e5fc 10px,
-    #b3e5fc 20px,
-    #ffd1dc 20px,
-    #ffd1dc 30px
-  ) 12;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
+  aspect-ratio: 16 / 10;
+  width: min(90vw, 800px);
+  background-image:
+    linear-gradient(var(--postcard-bg), var(--postcard-bg)),
+    repeating-linear-gradient(
+      -45deg,
+      #D6EAFF,
+      #D6EAFF 10px,
+      var(--postcard-bg) 10px,
+      var(--postcard-bg) 20px,
+      #FFCEEA 20px,
+      #FFCEEA 30px,
+      var(--postcard-bg) 30px,
+      var(--postcard-bg) 40px
+    );
+  border: 10px solid transparent;
+  background-clip: padding-box, border-box;
+  background-origin: border-box;
+  border-radius: 10px;
+  box-shadow: 2px 2px 8px rgba(126, 126, 190, 0.15);
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .postcard-content {
@@ -62,18 +77,18 @@
 
 .postcard-left {
   flex: 1;
-  background: white;
+  background: var(--postcard-bg);
 }
 
 .postcard-divider {
   width: 1px;
-  background: #ddd;
+  background: rgba(126, 126, 190, 0.3);
   margin: 20px 0;
 }
 
 .postcard-right {
   flex: 1;
-  background: white;
+  background: var(--postcard-bg);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -82,7 +97,7 @@
 .stamp-placeholder {
   width: 120px;
   height: 90px;
-  border: 2px dashed #ddd;
+  border: 2px dashed rgba(126, 126, 190, 0.3);
   align-self: flex-end;
   margin-bottom: 20px;
   background: repeating-linear-gradient(
@@ -99,13 +114,13 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 20px;
+  gap: 50px;
   padding: 20px;
 }
 
 .address-line {
   height: 1px;
-  background: #e0e0e0;
+  background: rgba(126, 126, 190, 0.3);
   width: 100%;
 }
 
@@ -113,7 +128,7 @@
   position: absolute;
   padding: 8px 12px;
   background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #ddd;
+  border: 1px solid rgba(126, 126, 190, 0.3);
   border-radius: 4px;
   cursor: move;
   font-size: 16px;
@@ -122,7 +137,7 @@
 }
 
 .text-label:hover {
-  border-color: #7b68b8;
+  border-color: rgba(126, 126, 190, 0.3);
   box-shadow: 0 4px 12px rgba(123, 104, 184, 0.2);
 }
 
@@ -156,7 +171,7 @@
 
 .mark-wrapper.selected {
   border-color: #7b68b8;
-  box-shadow: 0 0 0 2px rgba(123, 104, 184, 0.3);
+  box-shadow: 0 0 0 2px rgba(126, 126, 190, 0.3);
   background: rgba(123, 104, 184, 0.05);
 }
 
@@ -186,7 +201,7 @@
 .toolbar-button {
   width: 50px;
   height: 50px;
-  border: 2px solid #ddd;
+  border: 2px solid rgba(126, 126, 190, 0.3);
   background: white;
   border-radius: 50%;
   font-size: 24px;

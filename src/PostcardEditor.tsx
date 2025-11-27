@@ -253,6 +253,7 @@ function PostcardEditor() {
                 <div className="address-line" />
                 <div className="address-line" />
                 <div className="address-line" />
+                <div className="address-line" />
               </div>
             </div>
           </div>
