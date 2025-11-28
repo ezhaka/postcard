@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import type { DragEvent as ReactDragEvent, MouseEvent as ReactMouseEvent } from 'react'
+import type { MouseEvent as ReactMouseEvent } from 'react'
 import html2canvas from 'html2canvas'
+import { TextWidget, type TextLabel } from './TextWidget'
+import { StickerWidget, type Sticker } from './StickerWidget'
 import stampEmpty from './assets/stamp-empty.svg'
 import iconToolbarSticker from './assets/icon-toolbar-sticker.svg'
 import iconToolbarStamp from './assets/icon-toolbar-stamp.svg'
@@ -27,33 +29,11 @@ import stickerSun from './assets/stickers/sun.svg'
 import stickerThumbsup from './assets/stickers/thumbsup.svg'
 import './PostcardEditor.css'
 
-interface TextLabel {
-  id: string
-  x: number
-  y: number
-  text: string
-  isEditing: boolean
-  fontFamily: string
-}
-
-// TODO: id, x, y are duplicated in TextLabel, extract common interface, representing an object on the canvas
-interface Mark {
-  id: string
-  x: number
-  y: number
-  type: 'sticker' | 'stamp'
-  stickerSrc?: string
-}
-
-const markIconMeta: Record<Mark['type'], { src: string; label: string }> = {
-  sticker: { src: iconToolbarSticker, label: 'Sticker' },
-  stamp: { src: iconToolbarStamp, label: 'Stamp' },
-}
+type Widget = TextLabel | Sticker
 
 interface DragState {
   itemId: string
-  // TODO: we're duplicating 'text' | 'mark' server times in the types, extract to a type
-  itemType: 'text' | 'mark'
+  itemType: Widget['widgetType']
   // TODO?: What's the difference between startX and initialX?
   startX: number
   startY: number
@@ -63,8 +43,7 @@ interface DragState {
 
 interface SelectedWidget {
   id: string
-    // TODO?: can't type be derived given we have an id?
-  type: 'text' | 'mark'
+  type: Widget['widgetType']
 }
 
 interface FontOption {
@@ -121,14 +100,7 @@ const stickerOptions: StickerOption[] = [
 ];
 
 function PostcardEditor() {
-  // TODO: have only one state for all widgets, and use itemType to distinguish;
-  //   `stamp` should just become a non-draggable, non-selectable widget with fixed position from the start;
-  //   `addTextLabel` & `addMark` should also be merged into a single function;
-  //   `handleTextMouseDown` & `handleMarkMouseDown` should also be merged into a single function;
-  const [textLabels, setTextLabels] = useState<TextLabel[]>([])
-  const [marks, setMarks] = useState<Mark[]>([])
-
-  const [selectedMarkType, setSelectedMarkType] = useState<'sticker' | 'stamp'>('sticker')
+  const [widgets, setWidgets] = useState<Record<string, Widget>>({})
   // TODO?: if we have drag state as a state (you know), why do we need to pass the same info inside the drag event, unpack it and parse it? Can we store it as a react state instead?
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [selectedWidget, setSelectedWidget] = useState<SelectedWidget | null>(null)
@@ -142,71 +114,52 @@ function PostcardEditor() {
   const [isStampAnimating, setStampAnimating] = useState(false)
 
   const canvasRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
   const fontPickerRef = useRef<HTMLDivElement>(null)
   const stampButtonRef = useRef<HTMLButtonElement>(null)
   const stampDropdownRef = useRef<HTMLDivElement>(null)
   const stickerDropdownRef = useRef<HTMLDivElement>(null)
 
-  const addTextLabel = (
-    fontFamily = 'Unbounded',
-    text = 'Double click to edit',
-    position?: { x: number; y: number }
-  ) => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const rect = canvas.getBoundingClientRect()
-    const newLabel: TextLabel = {
-      id: `text-${Date.now()}`,
-      x: position?.x ?? rect.width / 2,
-      y: position?.y ?? rect.height / 2,
-      text,
-      isEditing: false,
-      fontFamily
-    }
-    setTextLabels(labels => [...labels, newLabel])
-  }
-
-  const addMark = (type?: Mark['type'], stickerSrc?: string) => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const rect = canvas.getBoundingClientRect()
-    const newMark: Mark = {
-      id: `mark-${Date.now()}`,
-      x: rect.width / 2,
-      y: rect.height / 2,
-      type: type ?? selectedMarkType,
-      stickerSrc
-    }
-    setMarks([...marks, newMark])
+  const addWidget = (widget: Widget) => {
+    setWidgets(widgets => ({ ...widgets, [widget.id]: widget }))
   }
 
   const handleStickerSelect = (option: StickerOption) => {
-    addMark('sticker', option.src)
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const rect = canvas.getBoundingClientRect()
+
+    addWidget({
+      id: `sticker-${Date.now()}`,
+      widgetType: 'sticker',
+      x: rect.width / 2,
+      y: rect.height / 2,
+      stickerSrc: option.src
+    })
+
     setStickerDropdownOpen(false)
   }
 
   const handleFontOptionSelect = (option: FontOption) => {
-    addTextLabel(option.family, option.sampleText)
-    setFontMenuOpen(false)
-  }
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const rect = canvas.getBoundingClientRect()
 
-  const handleFontDragStart = (option: FontOption, event: ReactDragEvent<HTMLButtonElement>) => {
-    event.dataTransfer?.setData('application/json', JSON.stringify({
-      family: option.family,
-      text: option.sampleText
-    }))
-    event.dataTransfer?.setData('text/plain', option.sampleText)
-    event.dataTransfer.effectAllowed = 'copy'
+    addWidget({
+      id: `text-${Date.now()}`,
+      widgetType: 'text',
+      x: rect.width / 2,
+      y: rect.height / 2,
+      text: option.sampleText,
+      isEditing: false,
+      fontFamily: option.family
+    })
+
     setFontMenuOpen(false)
   }
 
   const handleStampSelect = (option: StampOption) => {
     setStampPlaceholderSrc(option.src)
     setStampDropdownOpen(false)
-    setSelectedMarkType('sticker')
   }
 
   useEffect(() => {
@@ -216,45 +169,6 @@ function PostcardEditor() {
     return () => window.clearTimeout(timeoutId)
   }, [stampPlaceholderSrc])
 
-  const handleCanvasDragOver = (event: ReactDragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    event.dataTransfer.dropEffect = 'copy'
-  }
-
-  const handleCanvasDrop = (event: ReactDragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    const data = event.dataTransfer.getData('application/json')
-    if (!data) return
-    
-    try {
-      const payload = JSON.parse(data)
-      const rect = canvasRef.current?.getBoundingClientRect()
-      if (!rect) return
-
-      // Handle text label drop
-      if (payload.family && payload.text) {
-        addTextLabel(payload.family, payload.text, {
-          x: event.clientX - rect.left,
-          y: event.clientY - rect.top
-        })
-      }
-      // Handle sticker drop
-      else if (payload.type === 'sticker' && payload.src) {
-        const canvas = canvasRef.current
-        if (!canvas) return
-        const newMark: Mark = {
-          id: `mark-${Date.now()}`,
-          x: event.clientX - rect.left,
-          y: event.clientY - rect.top,
-          type: 'sticker',
-          stickerSrc: payload.src
-        }
-        setMarks([...marks, newMark])
-      }
-    } catch {
-      return
-    }
-  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -269,7 +183,6 @@ function PostcardEditor() {
         !stampButtonRef.current.contains(event.target as Node)
       ) {
         setStampDropdownOpen(false)
-        setSelectedMarkType('sticker')
       }
       if (
         stickerDropdownOpen &&
@@ -284,31 +197,19 @@ function PostcardEditor() {
     return () => window.removeEventListener('mousedown', handleClickOutside)
   }, [stampDropdownOpen, stickerDropdownOpen])
 
-  const handleTextMouseDown = (e: ReactMouseEvent<HTMLDivElement>, label: TextLabel) => {
-    if (label.isEditing) return
+  const handleWidgetMouseDown = (e: ReactMouseEvent<HTMLDivElement>, widget: Widget) => {
+    // Don't start drag if editing text
+    if (widget.widgetType === 'text' && widget.isEditing) return
 
     e.stopPropagation()
-    setSelectedWidget({ id: label.id, type: 'text' })
+    setSelectedWidget({ id: widget.id, type: widget.widgetType })
     setDragState({
-      itemId: label.id,
-      itemType: 'text',
+      itemId: widget.id,
+      itemType: widget.widgetType,
       startX: e.clientX,
       startY: e.clientY,
-      initialX: label.x,
-      initialY: label.y
-    })
-  }
-
-  const handleMarkMouseDown = (e: ReactMouseEvent<HTMLDivElement>, mark: Mark) => {
-    e.stopPropagation()
-    setSelectedWidget({ id: mark.id, type: 'mark' })
-    setDragState({
-      itemId: mark.id,
-      itemType: 'mark',
-      startX: e.clientX,
-      startY: e.clientY,
-      initialX: mark.x,
-      initialY: mark.y
+      initialX: widget.x,
+      initialY: widget.y
     })
   }
 
@@ -318,23 +219,14 @@ function PostcardEditor() {
     const deltaX = e.clientX - dragState.startX
     const deltaY = e.clientY - dragState.startY
 
-    if (dragState.itemType === 'text') {
-      setTextLabels(labels =>
-        labels.map(label =>
-          label.id === dragState.itemId
-            ? { ...label, x: dragState.initialX + deltaX, y: dragState.initialY + deltaY }
-            : label
-        )
-      )
-    } else if (dragState.itemType === 'mark') {
-      setMarks(currentMarks =>
-        currentMarks.map(mark =>
-          mark.id === dragState.itemId
-            ? { ...mark, x: dragState.initialX + deltaX, y: dragState.initialY + deltaY }
-            : mark
-        )
-      )
-    }
+    setWidgets(widgets => ({
+      ...widgets,
+      [dragState.itemId]: {
+        ...widgets[dragState.itemId],
+        x: dragState.initialX + deltaX,
+        y: dragState.initialY + deltaY
+      }
+    }))
   }
 
   const handleMouseUp = () => {
@@ -342,28 +234,33 @@ function PostcardEditor() {
   }
 
   const handleTextDoubleClick = (labelId: string) => {
-    setTextLabels(labels =>
-      labels.map(label =>
-        label.id === labelId ? { ...label, isEditing: true } : label
-      )
-    )
-    setTimeout(() => inputRef.current?.focus(), 0)
+    const widget = widgets[labelId]
+    if (widget && widget.widgetType === 'text') {
+      setWidgets(widgets => ({
+        ...widgets,
+        [labelId]: { ...widget, isEditing: true }
+      }))
+    }
   }
 
   const handleTextChange = (labelId: string, newText: string) => {
-    setTextLabels(labels =>
-      labels.map(label =>
-        label.id === labelId ? { ...label, text: newText } : label
-      )
-    )
+    const widget = widgets[labelId]
+    if (widget && widget.widgetType === 'text') {
+      setWidgets(widgets => ({
+        ...widgets,
+        [labelId]: { ...widget, text: newText }
+      }))
+    }
   }
 
   const handleTextBlur = (labelId: string) => {
-    setTextLabels(labels =>
-      labels.map(label =>
-        label.id === labelId ? { ...label, isEditing: false } : label
-      )
-    )
+    const widget = widgets[labelId]
+    if (widget && widget.widgetType === 'text') {
+      setWidgets(widgets => ({
+        ...widgets,
+        [labelId]: { ...widget, isEditing: false }
+      }))
+    }
   }
 
   const handleCanvasClick = (e: ReactMouseEvent<HTMLDivElement>) => {
@@ -377,11 +274,10 @@ function PostcardEditor() {
   const handleDeleteWidget = () => {
     if (!selectedWidget) return
 
-    if (selectedWidget.type === 'text') {
-      setTextLabels(labels => labels.filter(label => label.id !== selectedWidget.id))
-    } else if (selectedWidget.type === 'mark') {
-      setMarks(currentMarks => currentMarks.filter(mark => mark.id !== selectedWidget.id))
-    }
+    setWidgets(widgets => {
+      const { [selectedWidget.id]: _, ...rest } = widgets
+      return rest
+    })
     setSelectedWidget(null)
   }
 
@@ -420,7 +316,9 @@ function PostcardEditor() {
       // Check for Delete (Windows/Linux) or Backspace (Mac Delete key)
       if (e.key === 'Delete' || e.key === 'Backspace') {
         // Don't delete if we're editing text
-        const isEditingText = textLabels.some(label => label.isEditing)
+        const isEditingText = Object.values(widgets).some(
+          widget => widget.widgetType === 'text' && widget.isEditing
+        )
         if (!isEditingText) {
           e.preventDefault()
           handleDeleteWidget()
@@ -430,37 +328,7 @@ function PostcardEditor() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedWidget, textLabels])
-
-  /** WTF IS HERE?? */
-  const renderMark = (mark: Mark) => {
-    const size = 52
-    // If it's a sticker with a specific stickerSrc, use that
-    if (mark.type === 'sticker' && mark.stickerSrc) {
-      return (
-        <img
-          src={mark.stickerSrc}
-          alt="Sticker"
-          className="mark-icon"
-          style={{ width: size, height: size }}
-          draggable={false}
-        />
-      )
-    }
-    // Otherwise use the default icon for the mark type
-    const icon = markIconMeta[mark.type]
-    if (!icon) return null
-
-    return (
-      <img
-        src={icon.src}
-        alt={`${icon.label} mark`}
-        className="mark-icon"
-        style={{ width: size, height: size }}
-        draggable={false}
-      />
-    )
-  }
+  }, [selectedWidget, widgets])
 
   return (
     <div className="postcard-editor">
@@ -486,8 +354,6 @@ function PostcardEditor() {
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onClick={handleCanvasClick}
-        onDragOver={handleCanvasDragOver}
-        onDrop={handleCanvasDrop}
       >
         <div className="postcard-border">
           <div className="postcard-content">
@@ -513,56 +379,30 @@ function PostcardEditor() {
           </div>
         </div>
 
-        {textLabels.map(label => (
-          <div
-            key={label.id}
-            className={`text-label ${label.fontFamily === 'Great Vibes' ? 'font-great-vibes' : ''} ${selectedWidget?.id === label.id && selectedWidget?.type === 'text' ? 'selected' : ''}`}
-            style={{
-              left: label.x,
-              top: label.y,
-              transform: 'translate(-50%, -50%)',
-              fontFamily: label.fontFamily
-            }}
-            onMouseDown={(e) => handleTextMouseDown(e, label)}
-            onDoubleClick={() => handleTextDoubleClick(label.id)}
-          >
-            {label.isEditing ? (
-              <input
-                ref={inputRef}
-                type="text"
-                value={label.text}
-                onChange={(e) => {
-                  handleTextChange(label.id, e.target.value)
-                  // Dynamically adjust size to prevent cropping
-                  if (inputRef.current) {
-                    inputRef.current.size = Math.max(e.target.value.length || 1, 1)
-                  }
-                }}
-                onBlur={() => handleTextBlur(label.id)}
-                className="text-input"
-                style={{ fontFamily: label.fontFamily }}
-                size={Math.max(label.text.length || 1, 1)}
+        {Object.values(widgets).map(widget => {
+          if (widget.widgetType === 'text') {
+            return (
+              <TextWidget
+                key={widget.id}
+                widget={widget}
+                isSelected={selectedWidget?.id === widget.id && selectedWidget?.type === 'text'}
+                onMouseDown={handleWidgetMouseDown}
+                onDoubleClick={handleTextDoubleClick}
+                onTextChange={handleTextChange}
+                onTextBlur={handleTextBlur}
               />
-            ) : (
-              <span>{label.text}</span>
-            )}
-          </div>
-        ))}
-
-        {marks.map(mark => (
-          <div
-            key={mark.id}
-            className={`mark-wrapper ${selectedWidget?.id === mark.id && selectedWidget?.type === 'mark' ? 'selected' : ''}`}
-            style={{
-              left: mark.x,
-              top: mark.y,
-              transform: 'translate(-50%, -50%)'
-            }}
-            onMouseDown={(e) => handleMarkMouseDown(e, mark)}
-          >
-            {renderMark(mark)}
-          </div>
-        ))}
+            )
+          } else {
+            return (
+              <StickerWidget
+                key={widget.id}
+                widget={widget}
+                isSelected={selectedWidget?.id === widget.id && selectedWidget?.type === 'sticker'}
+                onMouseDown={handleWidgetMouseDown}
+              />
+            )
+          }
+        })}
       </div>
       <div className="toolbar-container">
         <div className="toolbar">
@@ -587,8 +427,6 @@ function PostcardEditor() {
                     type="button"
                     className="font-dropdown-item"
                     onClick={() => handleFontOptionSelect(option)}
-                    draggable
-                    onDragStart={(event) => handleFontDragStart(option, event)}
                   >
                     <span className="font-option-name" style={{ fontFamily: option.family }}>
                       {option.sampleText}
@@ -601,14 +439,10 @@ function PostcardEditor() {
           <div className="mark-picker">
             <button
               ref={stampButtonRef}
-              className={`toolbar-button ${selectedMarkType === 'stamp' ? 'active' : ''}`}
+              className={`toolbar-button ${stampDropdownOpen ? 'active' : ''}`}
               onClick={(event) => {
                 event.stopPropagation()
-                setStampDropdownOpen(prev => {
-                  const next = !prev
-                  setSelectedMarkType(next ? 'stamp' : 'sticker')
-                  return next
-                })
+                setStampDropdownOpen(prev => !prev)
               }}
               title="Select stamp"
               aria-label="Select stamp"
@@ -651,15 +485,6 @@ function PostcardEditor() {
                     type="button"
                     className="sticker-option"
                     onClick={() => handleStickerSelect(option)}
-                    draggable
-                    onDragStart={(event) => {
-                      event.dataTransfer?.setData('application/json', JSON.stringify({
-                        type: 'sticker',
-                        src: option.src
-                      }))
-                      event.dataTransfer.effectAllowed = 'copy'
-                      setStickerDropdownOpen(false)
-                    }}
                     aria-label={option.label}
                   >
                     <img src={option.src} alt={option.label} />
