@@ -102,7 +102,6 @@ const stickerOptions: StickerOption[] = [
 
 function PostcardEditor() {
   const [widgets, setWidgets] = useState<Record<string, Widget>>({})
-  // TODO?: if we have drag state as a state (you know), why do we need to pass the same info inside the drag event, unpack it and parse it? Can we store it as a react state instead?
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [selectedWidget, setSelectedWidget] = useState<SelectedWidget | null>(null)
 
