@@ -3,6 +3,7 @@ import type { MouseEvent as ReactMouseEvent } from 'react'
 import html2canvas from 'html2canvas'
 import { TextWidget, type TextLabel } from './TextWidget'
 import { StickerWidget, type Sticker } from './StickerWidget'
+import { DropdownMenu, DropdownTrigger } from './DropdownMenu'
 import stampEmpty from './assets/stamp-empty.svg'
 import iconToolbarSticker from './assets/icon-toolbar-sticker.svg'
 import iconToolbarStamp from './assets/icon-toolbar-stamp.svg'
@@ -105,19 +106,10 @@ function PostcardEditor() {
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [selectedWidget, setSelectedWidget] = useState<SelectedWidget | null>(null)
 
-  // TODO: introduce a component for menu, manage open state inside it; incapsulate the logic about outside clicks in this common component too
-  const [isFontMenuOpen, setFontMenuOpen] = useState(false)
-  const [stampDropdownOpen, setStampDropdownOpen] = useState(false)
-  const [stickerDropdownOpen, setStickerDropdownOpen] = useState(false)
-
   const [stampPlaceholderSrc, setStampPlaceholderSrc] = useState(stampEmpty)
   const [isStampAnimating, setStampAnimating] = useState(false)
 
   const canvasRef = useRef<HTMLDivElement>(null)
-  const fontPickerRef = useRef<HTMLDivElement>(null)
-  const stampButtonRef = useRef<HTMLButtonElement>(null)
-  const stampDropdownRef = useRef<HTMLDivElement>(null)
-  const stickerDropdownRef = useRef<HTMLDivElement>(null)
 
   const addWidget = (widget: Widget) => {
     setWidgets(widgets => ({ ...widgets, [widget.id]: widget }))
@@ -135,8 +127,6 @@ function PostcardEditor() {
       y: rect.height / 2,
       stickerSrc: option.src
     })
-
-    setStickerDropdownOpen(false)
   }
 
   const handleFontOptionSelect = (option: FontOption) => {
@@ -153,13 +143,10 @@ function PostcardEditor() {
       isEditing: false,
       fontFamily: option.family
     })
-
-    setFontMenuOpen(false)
   }
 
   const handleStampSelect = (option: StampOption) => {
     setStampPlaceholderSrc(option.src)
-    setStampDropdownOpen(false)
   }
 
   useEffect(() => {
@@ -168,34 +155,6 @@ function PostcardEditor() {
     const timeoutId = window.setTimeout(() => setStampAnimating(false), animationDuration)
     return () => window.clearTimeout(timeoutId)
   }, [stampPlaceholderSrc])
-
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (fontPickerRef.current && !fontPickerRef.current.contains(event.target as Node)) {
-        setFontMenuOpen(false)
-      }
-      if (
-        stampDropdownOpen &&
-        stampDropdownRef.current &&
-        !stampDropdownRef.current.contains(event.target as Node) &&
-        stampButtonRef.current &&
-        !stampButtonRef.current.contains(event.target as Node)
-      ) {
-        setStampDropdownOpen(false)
-      }
-      if (
-        stickerDropdownOpen &&
-        stickerDropdownRef.current &&
-        !stickerDropdownRef.current.contains(event.target as Node)
-      ) {
-        setStickerDropdownOpen(false)
-      }
-    }
-
-    window.addEventListener('mousedown', handleClickOutside)
-    return () => window.removeEventListener('mousedown', handleClickOutside)
-  }, [stampDropdownOpen, stickerDropdownOpen])
 
   const handleWidgetMouseDown = (e: ReactMouseEvent<HTMLDivElement>, widget: Widget) => {
     // Don't start drag if editing text
@@ -264,7 +223,6 @@ function PostcardEditor() {
   }
 
   const handleCanvasClick = (e: ReactMouseEvent<HTMLDivElement>) => {
-    setFontMenuOpen(false)
     // Only deselect if clicking directly on the canvas, not on widgets
     if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.postcard-border')) {
       setSelectedWidget(null)
@@ -370,10 +328,9 @@ function PostcardEditor() {
               />
 
               <div className="address-lines">
-                <div className="address-line" />
-                <div className="address-line" />
-                <div className="address-line" />
-                <div className="address-line" />
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="address-line" />
+                ))}
               </div>
             </div>
           </div>
@@ -406,93 +363,70 @@ function PostcardEditor() {
       </div>
       <div className="toolbar-container">
         <div className="toolbar">
-          <div className="font-picker" ref={fontPickerRef}>
-            <button
-              type="button"
-              className={`toolbar-button ${isFontMenuOpen ? 'active' : ''}`}
-              onClick={(e) => {
-                e.stopPropagation()
-                setFontMenuOpen(open => !open)
-              }}
-              title="Add text"
-              aria-label="Add text"
-            >
-              <img src={iconToolbarText} alt="" className="toolbar-icon" />
-            </button>
-            {isFontMenuOpen && (
-              <div className="font-dropdown">
-                {fontOptions.map(option => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    className="font-dropdown-item"
-                    onClick={() => handleFontOptionSelect(option)}
-                  >
-                    <span className="font-option-name" style={{ fontFamily: option.family }}>
-                      {option.sampleText}
-                    </span>
-                  </button>
-                ))}
-              </div>
+          <DropdownMenu
+            className="font-picker"
+            items={fontOptions}
+            onItemSelect={handleFontOptionSelect}
+            gridColumns={3}
+            gap="0"
+            renderItem={(option) => (
+              <button type="button" className="font-dropdown-item">
+                <span className="font-option-name" style={{ fontFamily: option.family }}>
+                  {option.sampleText}
+                </span>
+              </button>
             )}
-          </div>
-          <div className="widget-picker">
-            <button
-              ref={stampButtonRef}
-              className={`toolbar-button ${stampDropdownOpen ? 'active' : ''}`}
-              onClick={(event) => {
-                event.stopPropagation()
-                setStampDropdownOpen(prev => !prev)
-              }}
-              title="Select stamp"
-              aria-label="Select stamp"
-            >
-              <img src={iconToolbarStamp} alt="" className="toolbar-icon" />
-            </button>
-            {stampDropdownOpen && (
-              <div className="stamp-dropdown" ref={stampDropdownRef} aria-hidden="true">
-                {stampOptions.map(option => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    className="stamp-option"
-                    onClick={() => handleStampSelect(option)}
-                    aria-label={option.label}
-                  >
-                    <img src={option.src} alt={option.label} />
-                  </button>
-                ))}
-              </div>
+            trigger={(isOpen, toggleOpen) => (
+              <DropdownTrigger
+                isOpen={isOpen}
+                toggleOpen={toggleOpen}
+                iconSrc={iconToolbarText}
+                title="Add text"
+                ariaLabel="Add text"
+              />
             )}
-          </div>
-          <div className="widget-picker">
-            <button
-              className={`toolbar-button ${stickerDropdownOpen ? 'active' : ''}`}
-              onClick={(event) => {
-                event.stopPropagation()
-                setStickerDropdownOpen(prev => !prev)
-              }}
-              title="Add sticker"
-              aria-label="Add sticker"
-            >
-              <img src={iconToolbarSticker} alt="" className="toolbar-icon" />
-            </button>
-            {stickerDropdownOpen && (
-              <div className="sticker-dropdown" ref={stickerDropdownRef} aria-hidden="true">
-                {stickerOptions.map(option => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    className="sticker-option"
-                    onClick={() => handleStickerSelect(option)}
-                    aria-label={option.label}
-                  >
-                    <img src={option.src} alt={option.label} />
-                  </button>
-                ))}
-              </div>
+          />
+          <DropdownMenu
+            className="widget-picker"
+            items={stampOptions}
+            onItemSelect={handleStampSelect}
+            gridColumns={3}
+            gap="1rem"
+            renderItem={(option) => (
+              <button type="button" className="stamp-option" aria-label={option.label}>
+                <img src={option.src} alt={option.label} />
+              </button>
             )}
-          </div>
+            trigger={(isOpen, toggleOpen) => (
+              <DropdownTrigger
+                isOpen={isOpen}
+                toggleOpen={toggleOpen}
+                iconSrc={iconToolbarStamp}
+                title="Select stamp"
+                ariaLabel="Select stamp"
+              />
+            )}
+          />
+          <DropdownMenu
+            className="widget-picker"
+            items={stickerOptions}
+            onItemSelect={handleStickerSelect}
+            gridColumns={6}
+            renderItem={(option) => (
+              <button type="button" className="sticker-option" aria-label={option.label}>
+                <img src={option.src} alt={option.label} />
+              </button>
+            )}
+            trigger={(isOpen, toggleOpen) => (
+              <DropdownTrigger
+                isOpen={isOpen}
+                toggleOpen={toggleOpen}
+                iconSrc={iconToolbarSticker}
+                title="Add sticker"
+                ariaLabel="Add sticker"
+              />
+            )}
+          />
         </div>
         <div className="footer">
          <img src={madeInMatter} alt="Made in Matter" className="made-in-matter" />
