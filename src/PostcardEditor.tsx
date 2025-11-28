@@ -36,6 +36,7 @@ interface TextLabel {
   fontFamily: string
 }
 
+// TODO: id, x, y are duplicated in TextLabel, extract common interface, representing an object on the canvas
 interface Mark {
   id: string
   x: number
@@ -51,7 +52,9 @@ const markIconMeta: Record<Mark['type'], { src: string; label: string }> = {
 
 interface DragState {
   itemId: string
+  // TODO: we're duplicating 'text' | 'mark' server times in the types, extract to a type
   itemType: 'text' | 'mark'
+  // TODO?: What's the difference between startX and initialX?
   startX: number
   startY: number
   initialX: number
@@ -60,6 +63,7 @@ interface DragState {
 
 interface SelectedWidget {
   id: string
+    // TODO?: can't type be derived given we have an id?
   type: 'text' | 'mark'
 }
 
@@ -76,6 +80,7 @@ const fontOptions: FontOption[] = [
   { id: 'great-vibes', label: 'Great Vibes', family: 'Great Vibes', sampleText: 'Sending love' }
 ];
 
+// TODO: rename to StampType
 interface StampOption {
   id: string
   label: string
@@ -91,6 +96,7 @@ const stampOptions: StampOption[] = [
   { id: 'christmas', label: 'Christmas', src: stampChristmas }
 ];
 
+// TODO: rename to StickerType
 interface StickerOption {
   id: string
   label: string
@@ -115,16 +121,25 @@ const stickerOptions: StickerOption[] = [
 ];
 
 function PostcardEditor() {
+  // TODO: have only one state for all widgets, and use itemType to distinguish;
+  //   `addTextLabel` & `addMark` should also be merged into a single function;
+  //   `handleTextMouseDown` & `handleMarkMouseDown` should also be merged into a single function;
   const [textLabels, setTextLabels] = useState<TextLabel[]>([])
   const [marks, setMarks] = useState<Mark[]>([])
+
   const [selectedMarkType, setSelectedMarkType] = useState<'sticker' | 'stamp'>('sticker')
+  // TODO?: if we have drag state as a state (you know), why do we need to pass the same info inside the drag event, unpack it and parse it? Can we store it as a react state instead?
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [selectedWidget, setSelectedWidget] = useState<SelectedWidget | null>(null)
+
+  // TODO: introduce a component for menu, manage open state inside it; incapsulate the logic about outside clicks in this common component too
   const [isFontMenuOpen, setFontMenuOpen] = useState(false)
   const [stampDropdownOpen, setStampDropdownOpen] = useState(false)
   const [stickerDropdownOpen, setStickerDropdownOpen] = useState(false)
+
   const [stampPlaceholderSrc, setStampPlaceholderSrc] = useState(stampEmpty)
   const [isStampAnimating, setStampAnimating] = useState(false)
+
   const canvasRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const fontPickerRef = useRef<HTMLDivElement>(null)
@@ -478,12 +493,15 @@ function PostcardEditor() {
             <div className="postcard-left" />
             <div className="postcard-divider" />
             <div className="postcard-right">
+
+              {/* TODO: extract stamp into a component together with isStampAnimating logic */}
               <img
                 src={stampPlaceholderSrc}
                 alt="Stamp placeholder"
                 className={`stamp-placeholder ${isStampAnimating ? 'animate' : ''}`}
                 draggable="false"
               />
+
               <div className="address-lines">
                 <div className="address-line" />
                 <div className="address-line" />
