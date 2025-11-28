@@ -5,11 +5,24 @@ import iconToolbarSticker from './assets/icon-toolbar-sticker.svg'
 import iconToolbarStamp from './assets/icon-toolbar-stamp.svg'
 import iconToolbarText from './assets/icon-toolbar-text.svg'
 import stampChoco from './assets/stamps/stamp-choco.svg'
+import stampChristmas from './assets/stamps/stamp-christmas.svg'
 import stampCloud from './assets/stamps/stamp-cloud.svg'
-import stampForest from './assets/stamps/stamp-forest.svg'
 import stampItaly from './assets/stamps/stamp-italy.svg'
 import stampMountain from './assets/stamps/stamp-mountain.svg'
 import stampPiggy from './assets/stamps/stamp-piggy.svg'
+import madeInMatter from './assets/made-in-matter.svg'
+import stickerFire from './assets/stickers/fire.svg'
+import stickerFireworks from './assets/stickers/fireworks.svg'
+import stickerFlash from './assets/stickers/flash.svg'
+import stickerHeart from './assets/stickers/heart.svg'
+import stickerKiss from './assets/stickers/kiss.svg'
+import stickerMail from './assets/stickers/mail.svg'
+import stickerSend from './assets/stickers/send.svg'
+import stickerShine from './assets/stickers/shine.svg'
+import stickerSmile from './assets/stickers/smile.svg'
+import stickerSmileyBlessed from './assets/stickers/smiley-blessed--Streamline-Freehand.svg'
+import stickerSun from './assets/stickers/sun.svg'
+import stickerThumbsup from './assets/stickers/thumbsup.svg'
 import './PostcardEditor.css'
 
 interface TextLabel {
@@ -26,6 +39,7 @@ interface Mark {
   x: number
   y: number
   type: 'sticker' | 'stamp'
+  stickerSrc?: string
 }
 
 const markIconMeta: Record<Mark['type'], { src: string; label: string }> = {
@@ -55,8 +69,8 @@ interface FontOption {
 }
 
 const fontOptions: FontOption[] = [
-  { id: 'playwrite', label: 'Playwrite US Modern', family: 'Playwrite US Modern', sampleText: 'Warm hello' },
-  { id: 'poppins', label: 'Poppins', family: 'Poppins', sampleText: 'Little note' },
+  { id: 'playwrite', label: 'Playwrite US Modern', family: 'Playwrite US Modern, Playpen Sans', sampleText: 'Warm hello' },
+  { id: 'poppins', label: 'Poppins', family: 'Poppins, Noto Sans', sampleText: 'Little note' },
   { id: 'great-vibes', label: 'Great Vibes', family: 'Great Vibes', sampleText: 'Sending love' }
 ];
 
@@ -70,9 +84,32 @@ const stampOptions: StampOption[] = [
   { id: 'piggy', label: 'Piggy', src: stampPiggy },
   { id: 'cloud', label: 'Cloud', src: stampCloud },
   { id: 'choco', label: 'Chocolate', src: stampChoco },
-  { id: 'forest', label: 'Forest', src: stampForest },
   { id: 'italy', label: 'Italy', src: stampItaly },
-  { id: 'mountain', label: 'Mountain', src: stampMountain }
+  { id: 'mountain', label: 'Mountain', src: stampMountain },
+  { id: 'christmas', label: 'Christmas', src: stampChristmas }
+];
+
+interface StickerOption {
+  id: string
+  label: string
+  src: string
+}
+
+const stickerOptions: StickerOption[] = [
+  { id: 'fire', label: 'Fire', src: stickerFire },
+  { id: 'heart', label: 'Heart', src: stickerHeart },
+
+  { id: 'flash', label: 'Flash', src: stickerFlash },
+  { id: 'fireworks', label: 'Fireworks', src: stickerFireworks },
+  { id: 'sun', label: 'Sun', src: stickerSun },
+
+  { id: 'mail', label: 'Mail', src: stickerMail },
+  { id: 'send', label: 'Send', src: stickerSend },
+  { id: 'shine', label: 'Shine', src: stickerShine },
+  { id: 'smile', label: 'Smile', src: stickerSmile },
+  { id: 'smiley-blessed', label: 'Smiley Blessed', src: stickerSmileyBlessed },
+  { id: 'kiss', label: 'Kiss', src: stickerKiss },
+  { id: 'thumbsup', label: 'Thumbs Up', src: stickerThumbsup }
 ];
 
 function PostcardEditor() {
@@ -83,6 +120,7 @@ function PostcardEditor() {
   const [selectedWidget, setSelectedWidget] = useState<SelectedWidget | null>(null)
   const [isFontMenuOpen, setFontMenuOpen] = useState(false)
   const [stampDropdownOpen, setStampDropdownOpen] = useState(false)
+  const [stickerDropdownOpen, setStickerDropdownOpen] = useState(false)
   const [stampPlaceholderSrc, setStampPlaceholderSrc] = useState(stampEmpty)
   const [isStampAnimating, setStampAnimating] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
@@ -90,6 +128,7 @@ function PostcardEditor() {
   const fontPickerRef = useRef<HTMLDivElement>(null)
   const stampButtonRef = useRef<HTMLButtonElement>(null)
   const stampDropdownRef = useRef<HTMLDivElement>(null)
+  const stickerDropdownRef = useRef<HTMLDivElement>(null)
 
   const addTextLabel = (
     fontFamily = 'Unbounded',
@@ -111,7 +150,7 @@ function PostcardEditor() {
     setTextLabels(labels => [...labels, newLabel])
   }
 
-  const addMark = (type?: Mark['type']) => {
+  const addMark = (type?: Mark['type'], stickerSrc?: string) => {
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -120,9 +159,15 @@ function PostcardEditor() {
       id: `mark-${Date.now()}`,
       x: rect.width / 2,
       y: rect.height / 2,
-      type: type ?? selectedMarkType
+      type: type ?? selectedMarkType,
+      stickerSrc
     }
     setMarks([...marks, newMark])
+  }
+
+  const handleStickerSelect = (option: StickerOption) => {
+    addMark('sticker', option.src)
+    setStickerDropdownOpen(false)
   }
 
   const handleFontOptionSelect = (option: FontOption) => {
@@ -162,20 +207,35 @@ function PostcardEditor() {
     event.preventDefault()
     const data = event.dataTransfer.getData('application/json')
     if (!data) return
-    let payload: { family: string; text: string }
+    
     try {
-      payload = JSON.parse(data)
+      const payload = JSON.parse(data)
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (!rect) return
+
+      // Handle text label drop
+      if (payload.family && payload.text) {
+        addTextLabel(payload.family, payload.text, {
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top
+        })
+      }
+      // Handle sticker drop
+      else if (payload.type === 'sticker' && payload.src) {
+        const canvas = canvasRef.current
+        if (!canvas) return
+        const newMark: Mark = {
+          id: `mark-${Date.now()}`,
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top,
+          type: 'sticker',
+          stickerSrc: payload.src
+        }
+        setMarks([...marks, newMark])
+      }
     } catch {
       return
     }
-
-    const rect = canvasRef.current?.getBoundingClientRect()
-    if (!rect) return
-
-    addTextLabel(payload.family, payload.text, {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top
-    })
   }
 
   useEffect(() => {
@@ -193,11 +253,18 @@ function PostcardEditor() {
         setStampDropdownOpen(false)
         setSelectedMarkType('sticker')
       }
+      if (
+        stickerDropdownOpen &&
+        stickerDropdownRef.current &&
+        !stickerDropdownRef.current.contains(event.target as Node)
+      ) {
+        setStickerDropdownOpen(false)
+      }
     }
 
     window.addEventListener('mousedown', handleClickOutside)
     return () => window.removeEventListener('mousedown', handleClickOutside)
-  }, [stampDropdownOpen])
+  }, [stampDropdownOpen, stickerDropdownOpen])
 
   const handleTextMouseDown = (e: ReactMouseEvent<HTMLDivElement>, label: TextLabel) => {
     if (label.isEditing) return
@@ -320,6 +387,19 @@ function PostcardEditor() {
   /** WTF IS HERE?? */
   const renderMark = (mark: Mark) => {
     const size = 52
+    // If it's a sticker with a specific stickerSrc, use that
+    if (mark.type === 'sticker' && mark.stickerSrc) {
+      return (
+        <img
+          src={mark.stickerSrc}
+          alt="Sticker"
+          className="mark-icon"
+          style={{ width: size, height: size }}
+          draggable={false}
+        />
+      )
+    }
+    // Otherwise use the default icon for the mark type
     const icon = markIconMeta[mark.type]
     if (!icon) return null
 
@@ -375,7 +455,7 @@ function PostcardEditor() {
         {textLabels.map(label => (
           <div
             key={label.id}
-            className={`text-label ${selectedWidget?.id === label.id && selectedWidget?.type === 'text' ? 'selected' : ''}`}
+            className={`text-label ${label.fontFamily === 'Great Vibes' ? 'font-great-vibes' : ''} ${selectedWidget?.id === label.id && selectedWidget?.type === 'text' ? 'selected' : ''}`}
             style={{
               left: label.x,
               top: label.y,
@@ -390,7 +470,13 @@ function PostcardEditor() {
                 ref={inputRef}
                 type="text"
                 value={label.text}
-                onChange={(e) => handleTextChange(label.id, e.target.value)}
+                onChange={(e) => {
+                  handleTextChange(label.id, e.target.value)
+                  // Dynamically adjust size to prevent cropping
+                  if (inputRef.current) {
+                    inputRef.current.size = Math.max(e.target.value.length || 1, 1)
+                  }
+                }}
                 onBlur={() => handleTextBlur(label.id)}
                 className="text-input"
                 style={{ fontFamily: label.fontFamily }}
@@ -486,18 +572,44 @@ function PostcardEditor() {
         </div>
         <div className="mark-picker">
           <button
-            className={`toolbar-button ${selectedMarkType === 'sticker' ? 'active' : ''}`}
+            className={`toolbar-button ${stickerDropdownOpen ? 'active' : ''}`}
             onClick={(event) => {
               event.stopPropagation()
-              setSelectedMarkType('sticker')
-              addMark('sticker')
+              setStickerDropdownOpen(prev => !prev)
             }}
             title="Add sticker"
             aria-label="Add sticker"
           >
             <img src={iconToolbarSticker} alt="" className="toolbar-icon" />
           </button>
+          {stickerDropdownOpen && (
+            <div className="sticker-dropdown" ref={stickerDropdownRef} aria-hidden="true">
+              {stickerOptions.map(option => (
+                <button
+                  key={option.id}
+                  type="button"
+                  className="sticker-option"
+                  onClick={() => handleStickerSelect(option)}
+                  draggable
+                  onDragStart={(event) => {
+                    event.dataTransfer?.setData('application/json', JSON.stringify({
+                      type: 'sticker',
+                      src: option.src
+                    }))
+                    event.dataTransfer.effectAllowed = 'copy'
+                    setStickerDropdownOpen(false)
+                  }}
+                  aria-label={option.label}
+                >
+                  <img src={option.src} alt={option.label} />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+      </div>
+      <div className="footer">
+        <img src={madeInMatter} alt="Made in Matter" className="made-in-matter" />
       </div>
     </div>
   )

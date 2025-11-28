@@ -4,7 +4,7 @@
   height: 100vh;
   width: 100vw;
   background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-  padding: 2rem;
+  padding: 2rem 2rem 0 2rem;
   box-sizing: border-box;
 }
 
@@ -164,6 +164,16 @@
   white-space: pre;
 }
 
+.text-label.font-great-vibes {
+  font-size: 72px;
+}
+
+.text-label.font-great-vibes .text-input {
+  font-size: 72px;
+  padding: 0 10px;
+  overflow: visible;
+}
+
 .text-label:hover {
   border-radius: 10px;
   border: 1px dashed rgba(126, 126, 190, 0.40);
@@ -179,12 +189,14 @@
   border: none;
   outline: none;
   width: auto;
+  min-width: 1ch;
   background: transparent;
   font-size: var(--text-label-font-size);
   text-align: center;
   display: inline-block;
   line-height: 1.2;
-  box-sizing: border-box;
+  overflow: visible;
+  box-sizing: content-box;
   padding: 0;
   margin: 0;
   font-family: inherit;
@@ -194,20 +206,18 @@
   position: absolute;
   cursor: move;
   z-index: 10;
-  padding: 5px;
-  /* border: 2px solid transparent; */
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  padding: 10px;
+  border-radius: 10px;
+
 }
 
 .mark-wrapper:hover {
-  transform: translate(-50%, -50%) scale(1.1);
+  border: 1px dashed rgba(126, 126, 190, 0.40);
 }
 
 .mark-wrapper.selected {
-  border-color: #7b68b8;
-  box-shadow: 0 0 0 2px rgba(126, 126, 190, 0.3);
-  background: rgba(123, 104, 184, 0.05);
+  border: 1px dashed rgba(126, 126, 190, 1);
+  box-shadow: 2px 2px 8px rgba(126, 126, 190, 0.15);
 }
 
 .mark {
@@ -288,8 +298,8 @@
 }
 
 .font-dropdown {
-  position: absolute;
-  bottom: 110%;
+  position: fixed;
+  bottom: 128px;
   left: 50%;
   transform: translateX(-50%);
   min-width: 220px;
@@ -330,15 +340,15 @@
 }
 
 .mark-picker {
-  position: relative;
+  position: static;
 }
 
 .stamp-dropdown {
   display: grid;
   grid-template-columns: repeat(3, var(--stamp-width));
   gap: 1rem;
-  position: absolute;
-  bottom: 60px;
+  position: fixed;
+  bottom: 128px;
   left: 50%;
   transform: translateX(-50%);
   min-width: 220px;
@@ -367,4 +377,61 @@
   display: block;
 }
 
+.sticker-dropdown {
+  position: fixed;
+  bottom: 128px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 400px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px 0 rgba(26, 46, 160, 0.10);
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  z-index: 20;
+  max-width: 400px;
+}
+
+.sticker-option {
+  border: none;
+  background: transparent;
+  padding: 0.6rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, border 0.2s ease;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  width: 60px;
+  height: 60px;
+}
+
+.sticker-option:hover {
+  border: 1px dashed rgba(126, 126, 190, 0.40);
+  background: rgba(126, 126, 190, 0.05);
+}
+
+.sticker-option img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 0;
+  margin-top: auto;
+}
+
+.made-in-matter {
+  height: auto;
+  display: block;
+}
 
