@@ -436,7 +436,7 @@ function PostcardEditor() {
               </div>
             )}
           </div>
-          <div className="mark-picker">
+          <div className="widget-picker">
             <button
               ref={stampButtonRef}
               className={`toolbar-button ${stampDropdownOpen ? 'active' : ''}`}
@@ -465,7 +465,7 @@ function PostcardEditor() {
               </div>
             )}
           </div>
-          <div className="mark-picker">
+          <div className="widget-picker">
             <button
               className={`toolbar-button ${stickerDropdownOpen ? 'active' : ''}`}
               onClick={(event) => {

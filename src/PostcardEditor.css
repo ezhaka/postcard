@@ -216,7 +216,7 @@
   font-family: inherit;
 }
 
-.mark-wrapper {
+.sticker-wrapper {
   position: absolute;
   cursor: move;
   z-index: 10;
@@ -225,23 +225,16 @@
 
 }
 
-.mark-wrapper:hover {
+.sticker-wrapper:hover {
   border: 1px dashed rgba(126, 126, 190, 0.40);
 }
 
-.mark-wrapper.selected {
+.sticker-wrapper.selected {
   border: 1px dashed rgba(126, 126, 190, 1);
   box-shadow: 2px 2px 8px rgba(126, 126, 190, 0.15);
 }
 
-.mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.mark-icon {
+.sticker-icon {
   display: block;
   pointer-events: none;
   user-select: none;
@@ -363,7 +356,7 @@
   line-height: 1.2;
 }
 
-.mark-picker {
+.widget-picker {
   position: static;
 }
 

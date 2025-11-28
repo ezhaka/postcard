@@ -20,7 +20,7 @@ export function StickerWidget({ widget, isSelected, onMouseDown }: StickerWidget
   return (
     <div
       key={widget.id}
-      className={`mark-wrapper ${isSelected ? 'selected' : ''}`}
+      className={`sticker-wrapper ${isSelected ? 'selected' : ''}`}
       style={{
         left: widget.x,
         top: widget.y,
@@ -31,7 +31,7 @@ export function StickerWidget({ widget, isSelected, onMouseDown }: StickerWidget
       <img
         src={widget.stickerSrc}
         alt="Sticker"
-        className="mark-icon"
+        className="sticker-icon"
         style={{ width: size, height: size }}
         draggable={false}
       />
