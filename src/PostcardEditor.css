@@ -149,19 +149,6 @@
   will-change: opacity;
 }
 
-/* .stamp-placeholder.animate {
-  animation: stamp-fade 0.35s ease;
-} */
-
-/* @keyframes stamp-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-} */
-
 .address-lines {
   flex: 1;
   display: flex;
@@ -217,13 +204,10 @@
 .text-input {
   border: none;
   outline: none;
-  /* width: auto; */
+  color: #3B3B50;
   min-width: 1ch;
   background: transparent;
-  /* padding: 10px; */
   font-size: var(--text-label-font-size);
-  /* box-shadow: 2px 2px 8px rgba(126, 126, 190, 0.15) inset;
-  border: 1px solid rgba(126, 126, 190, 1); */
   text-align: center;
   display: inline-block;
   line-height: 1.2;
