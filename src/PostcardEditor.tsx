@@ -107,7 +107,6 @@ function PostcardEditor() {
   const [selectedWidget, setSelectedWidget] = useState<SelectedWidget | null>(null)
 
   const [stampPlaceholderSrc, setStampPlaceholderSrc] = useState(stampEmpty)
-  const [isStampAnimating, setStampAnimating] = useState(false)
 
   const canvasRef = useRef<HTMLDivElement>(null)
 
@@ -148,13 +147,6 @@ function PostcardEditor() {
   const handleStampSelect = (option: StampOption) => {
     setStampPlaceholderSrc(option.src)
   }
-
-  useEffect(() => {
-    const animationDuration = 400
-    setStampAnimating(true)
-    const timeoutId = window.setTimeout(() => setStampAnimating(false), animationDuration)
-    return () => window.clearTimeout(timeoutId)
-  }, [stampPlaceholderSrc])
 
   const handleWidgetMouseDown = (e: ReactMouseEvent<HTMLDivElement>, widget: Widget) => {
     // Don't start drag if editing text
@@ -319,11 +311,10 @@ function PostcardEditor() {
             <div className="postcard-divider" />
             <div className="postcard-right">
 
-              {/* TODO: extract stamp into a component together with isStampAnimating logic */}
               <img
                 src={stampPlaceholderSrc}
                 alt="Stamp placeholder"
-                className={`stamp-placeholder ${isStampAnimating ? 'animate' : ''}`}
+                className="stamp-placeholder"
                 draggable="false"
               />
 
