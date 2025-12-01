@@ -60,7 +60,6 @@ const fontOptions: FontOption[] = [
   { id: 'great-vibes', label: 'Great Vibes', family: 'Great Vibes', sampleText: 'Sending love' }
 ];
 
-// TODO: rename to StampType
 interface StampOption {
   id: string
   label: string
@@ -76,7 +75,6 @@ const stampOptions: StampOption[] = [
   { id: 'christmas', label: 'Christmas', src: stampChristmas }
 ];
 
-// TODO: rename to StickerType
 interface StickerOption {
   id: string
   label: string

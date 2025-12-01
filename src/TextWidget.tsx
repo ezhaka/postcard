@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import type { MouseEvent as ReactMouseEvent } from 'react'
 
 export interface TextLabel {
@@ -28,7 +28,46 @@ export function TextWidget({
   onTextChange,
   onTextBlur
 }: TextWidgetProps) {
-  const inputRef = useRef<HTMLInputElement>(null)
+  const spanRef = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    if (widget.isEditing && spanRef.current) {
+      // Focus the contenteditable span
+      spanRef.current.focus()
+
+      // Move cursor to the end
+      const range = document.createRange()
+      const selection = window.getSelection()
+      range.selectNodeContents(spanRef.current)
+      range.collapse(false) // false = collapse to end
+      selection?.removeAllRanges()
+      selection?.addRange(range)
+    }
+  }, [widget.isEditing])
+
+  // Update the span content only when not editing
+  useEffect(() => {
+    const isEditing = widget.isEditing
+    if (spanRef.current && !isEditing) {
+      spanRef.current.textContent = widget.text || ' '
+    }
+  }, [widget.text, widget.isEditing])
+
+  const handleInput = (e: React.FormEvent<HTMLSpanElement>) => {
+    const newText = e.currentTarget.textContent || ''
+    onTextChange(widget.id, newText)
+  }
+
+  const handleBlur = () => {
+    onTextBlur(widget.id)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLSpanElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      onTextBlur(widget.id)
+    }
+  }
 
   return (
     <div
@@ -43,27 +82,18 @@ export function TextWidget({
       onMouseDown={(e) => onMouseDown(e, widget)}
       onDoubleClick={() => onDoubleClick(widget.id)}
     >
-      {widget.isEditing ? (
-        <input
-          ref={inputRef}
-          type="text"
-          value={widget.text}
-          onChange={(e) => {
-            onTextChange(widget.id, e.target.value)
-            // Dynamically adjust size to prevent cropping
-            if (inputRef.current) {
-              inputRef.current.size = Math.max(e.target.value.length || 1, 1)
-            }
-          }}
-          onBlur={() => onTextBlur(widget.id)}
-          className="text-input"
-          style={{ fontFamily: widget.fontFamily }}
-          size={Math.max(widget.text.length || 1, 1)}
-          autoFocus
-        />
-      ) : (
-        <span>{widget.text}</span>
-      )}
+      <span
+        ref={spanRef}
+        contentEditable={widget.isEditing}
+        suppressContentEditableWarning
+        onInput={handleInput}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        style={{
+          whiteSpace: 'pre',
+          outline: 'none'
+        }}
+      />
     </div>
   )
 }
