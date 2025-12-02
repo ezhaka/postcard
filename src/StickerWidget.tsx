@@ -20,6 +20,7 @@ export function StickerWidget({ widget, isSelected, onMouseDown }: StickerWidget
   return (
     <div
       key={widget.id}
+      data-widget-id={widget.id}
       className={`sticker-wrapper ${isSelected ? 'selected' : ''}`}
       style={{
         left: widget.x,

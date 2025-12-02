@@ -107,34 +107,93 @@ function PostcardEditor() {
 
   const canvasRef = useRef<HTMLDivElement>(null)
 
+  // Get the postcard border element to get canvas bounds
+  const getCanvasBounds = () => {
+    const postcardBorder = document.querySelector('.postcard-border') as HTMLElement
+    if (!postcardBorder) return null
+    const rect = postcardBorder.getBoundingClientRect()
+    return {
+      width: rect.width,
+      height: rect.height
+    }
+  }
+
+  // Constrain a position to stay within canvas bounds
+  const constrainPosition = (x: number, y: number, widgetType: Widget['widgetType'], widgetId?: string): { x: number; y: number } => {
+    const bounds = getCanvasBounds()
+    if (!bounds) return { x, y }
+
+    let widgetWidth = 52 // Default for stickers
+    let widgetHeight = 52
+
+    // Try to get actual widget dimensions from DOM
+    if (widgetId) {
+      const widgetElement = document.querySelector(`[data-widget-id="${widgetId}"]`) as HTMLElement
+      if (widgetElement) {
+        const rect = widgetElement.getBoundingClientRect()
+        widgetWidth = rect.width
+        widgetHeight = rect.height
+      } else {
+        // Fallback: use estimates based on widget type
+        if (widgetType === 'text') {
+          widgetWidth = 200 // Conservative estimate for text width
+          widgetHeight = 60 // Conservative estimate for text height
+        }
+      }
+    } else {
+      // Fallback when widget doesn't exist yet (e.g., when adding)
+      if (widgetType === 'text') {
+        widgetWidth = 200
+        widgetHeight = 60
+      }
+    }
+
+    const padding = 10 // Padding from edges
+    const minX = padding + widgetWidth / 2
+    const maxX = bounds.width - padding - widgetWidth / 2
+    const minY = padding + widgetHeight / 2
+    const maxY = bounds.height - padding - widgetHeight / 2
+
+    return {
+      x: Math.max(minX, Math.min(maxX, x)),
+      y: Math.max(minY, Math.min(maxY, y))
+    }
+  }
+
   const addWidget = (widget: Widget) => {
     setWidgets(widgets => ({ ...widgets, [widget.id]: widget }))
   }
 
   const handleStickerSelect = (option: StickerOption) => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const rect = canvas.getBoundingClientRect()
+    const bounds = getCanvasBounds()
+    if (!bounds) return
+
+    const centerX = bounds.width / 2
+    const centerY = bounds.height / 2
+    const constrained = constrainPosition(centerX, centerY, 'sticker')
 
     addWidget({
       id: `sticker-${Date.now()}`,
       widgetType: 'sticker',
-      x: rect.width / 2,
-      y: rect.height / 2,
+      x: constrained.x,
+      y: constrained.y,
       stickerSrc: option.src
     })
   }
 
   const handleFontOptionSelect = (option: FontOption) => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const rect = canvas.getBoundingClientRect()
+    const bounds = getCanvasBounds()
+    if (!bounds) return
+
+    const centerX = bounds.width / 2
+    const centerY = bounds.height / 2
+    const constrained = constrainPosition(centerX, centerY, 'text')
 
     addWidget({
       id: `text-${Date.now()}`,
       widgetType: 'text',
-      x: rect.width / 2,
-      y: rect.height / 2,
+      x: constrained.x,
+      y: constrained.y,
       text: option.sampleText,
       isEditing: false,
       fontFamily: option.family
@@ -167,12 +226,16 @@ function PostcardEditor() {
     const deltaX = e.clientX - dragState.startX
     const deltaY = e.clientY - dragState.startY
 
+    const newX = dragState.initialX + deltaX
+    const newY = dragState.initialY + deltaY
+    const constrained = constrainPosition(newX, newY, dragState.itemType, dragState.itemId)
+
     setWidgets(widgets => ({
       ...widgets,
       [dragState.itemId]: {
         ...widgets[dragState.itemId],
-        x: dragState.initialX + deltaX,
-        y: dragState.initialY + deltaY
+        x: constrained.x,
+        y: constrained.y
       }
     }))
   }
@@ -210,6 +273,7 @@ function PostcardEditor() {
       }))
     }
   }
+
 
   // Handle clicks outside the canvas to deselect
   useEffect(() => {

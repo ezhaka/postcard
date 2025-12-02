@@ -76,6 +76,7 @@ export function TextWidget({
   return (
     <div
       key={widget.id}
+      data-widget-id={widget.id}
       className={`text-label ${widget.fontFamily === 'Great Vibes' ? 'font-great-vibes' : ''} ${isSelected ? 'selected' : ''}`}
       style={{
         left: widget.x,
