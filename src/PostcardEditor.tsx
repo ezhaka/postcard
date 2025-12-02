@@ -218,6 +218,28 @@ function PostcardEditor() {
     }
   }
 
+  // Handle clicks outside the canvas to deselect
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const canvas = canvasRef.current
+      if (!canvas || !selectedWidget) return
+
+      // Check if the click is outside the canvas
+      if (!canvas.contains(e.target as Node)) {
+        // Don't deselect if we're editing text
+        const isEditingText = Object.values(widgets).some(
+          widget => widget.widgetType === 'text' && widget.isEditing
+        )
+        if (!isEditingText) {
+          setSelectedWidget(null)
+        }
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [selectedWidget, widgets])
+
   const handleDeleteWidget = () => {
     if (!selectedWidget) return
 
@@ -269,6 +291,17 @@ function PostcardEditor() {
         if (!isEditingText) {
           e.preventDefault()
           handleDeleteWidget()
+        }
+      }
+      // ESC key to deselect
+      if (e.key === 'Escape') {
+        // Don't deselect if we're editing text (let the blur handler handle it)
+        const isEditingText = Object.values(widgets).some(
+          widget => widget.widgetType === 'text' && widget.isEditing
+        )
+        if (!isEditingText && selectedWidget) {
+          e.preventDefault()
+          setSelectedWidget(null)
         }
       }
     }
