@@ -91,21 +91,9 @@
 .postcard-border {
   width: var(--postcard-width);
   height: var(--postcard-height);
-  background-image:
-    linear-gradient(var(--postcard-bg), var(--postcard-bg)),
-    repeating-linear-gradient(
-      -45deg,
-      #D6EAFF,
-      #D6EAFF 10px,
-      var(--postcard-bg) 10px,
-      var(--postcard-bg) 20px,
-      #FFCEEA 20px,
-      #FFCEEA 30px,
-      var(--postcard-bg) 30px,
-      var(--postcard-bg) 40px
-    );
+  background-image: url('./assets/border-tile.svg');
   border: 10px solid transparent;
-  background-clip: padding-box, border-box;
+  /* background-clip: padding-box; */
   background-origin: border-box;
   border-radius: 14px;
   box-shadow: 2px 2px 8px rgba(126, 126, 190, 0.15);
