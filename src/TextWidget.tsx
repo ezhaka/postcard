@@ -67,6 +67,10 @@ export function TextWidget({
       e.preventDefault()
       onTextBlur(widget.id)
     }
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      onTextBlur(widget.id)
+    }
   }
 
   return (

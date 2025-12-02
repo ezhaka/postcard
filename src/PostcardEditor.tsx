@@ -211,21 +211,22 @@ function PostcardEditor() {
     }
   }
 
-  const handleCanvasClick = (e: ReactMouseEvent<HTMLDivElement>) => {
-    // Only deselect if clicking directly on the canvas, not on widgets
-    if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.postcard-border')) {
-      setSelectedWidget(null)
-    }
-  }
-
   // Handle clicks outside the canvas to deselect
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClick = (e: MouseEvent) => {
       const canvas = canvasRef.current
       if (!canvas || !selectedWidget) return
-
-      // Check if the click is outside the canvas
-      if (!canvas.contains(e.target as Node)) {
+  
+      const target = e.target as Node
+      
+      // Check if click is outside canvas
+      const isOutsideCanvas = !canvas.contains(target)
+      
+      // Check if click is on canvas background (not on widgets)
+      const isOnCanvasBackground = canvas.contains(target) && 
+        (target === canvas || (target as HTMLElement).closest?.('.postcard-border'))
+      
+      if (isOutsideCanvas || isOnCanvasBackground) {
         // Don't deselect if we're editing text
         const isEditingText = Object.values(widgets).some(
           widget => widget.widgetType === 'text' && widget.isEditing
@@ -236,8 +237,8 @@ function PostcardEditor() {
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
   }, [selectedWidget, widgets])
 
   const handleDeleteWidget = () => {
@@ -295,14 +296,8 @@ function PostcardEditor() {
       }
       // ESC key to deselect
       if (e.key === 'Escape') {
-        // Don't deselect if we're editing text (let the blur handler handle it)
-        const isEditingText = Object.values(widgets).some(
-          widget => widget.widgetType === 'text' && widget.isEditing
-        )
-        if (!isEditingText && selectedWidget) {
           e.preventDefault()
           setSelectedWidget(null)
-        }
       }
     }
 
@@ -333,7 +328,6 @@ function PostcardEditor() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        onClick={handleCanvasClick}
       >
         <div className="postcard-border">
           <div className="postcard-content">
