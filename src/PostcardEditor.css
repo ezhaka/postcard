@@ -21,7 +21,6 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-bottom: 1rem;
   align-self: center;
   border-radius: 12px;
   gap: 0.2rem;
@@ -30,7 +29,7 @@
 .header h1 {
   font-size: clamp(2.5rem, 3vw, 3rem);
   color: rgba(126, 126, 190, 1);
-  margin: 0 0 0.5rem 0;
+  margin: 0;
   font-weight: 700;
 }
 
@@ -49,11 +48,11 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 1rem;
   padding: 0.75rem 1.5rem;
   border-radius: 60px;
   border: 1px solid #B4B4E2;
   color: rgba(126, 126, 190, 1);
+  margin: 0.5rem 0;
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
