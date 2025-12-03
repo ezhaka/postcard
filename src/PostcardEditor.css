@@ -76,6 +76,14 @@
   display: block;
 }
 
+.screenshot-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px;
+  height: 100%;
+}
+
 .canvas {
   position: relative;
   display: flex;
@@ -83,7 +91,6 @@
   justify-content: center;
   width: var(--postcard-width);
   height: var(--postcard-height); 
-  margin-bottom: 2rem;
   cursor: default;
   user-select: none;
 }
@@ -92,17 +99,15 @@
   width: var(--postcard-width);
   height: var(--postcard-height);
   background-image: url('./assets/border-tile.svg');
-  border: 10px solid transparent;
-  /* background-clip: padding-box; */
-  background-origin: border-box;
+  padding: 10px;
   border-radius: 14px;
   box-shadow: 2px 2px 8px rgba(126, 126, 190, 0.15);
-  padding: 0;
+  overflow: hidden;
   box-sizing: border-box;
-  overflow: hidden
 }
 
 .postcard-content {
+  background: var(--postcard-bg);
   display: flex;
   width: 100%;
   height: 100%;

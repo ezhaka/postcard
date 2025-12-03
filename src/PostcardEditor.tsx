@@ -107,6 +107,7 @@ function PostcardEditor() {
   const [stampPlaceholderSrc, setStampPlaceholderSrc] = useState(stampEmpty)
 
   const canvasRef = useRef<HTMLDivElement>(null)
+  const screenshotContainerRef = useRef<HTMLDivElement>(null)
 
   // Get the postcard border element to get canvas bounds
   const getCanvasBounds = () => {
@@ -333,24 +334,25 @@ function PostcardEditor() {
       </linearGradient>
       </defs>
     </svg>
-
   `
 
   const handleDownload = async () => {
-    const canvas = document.querySelector('.canvas') as HTMLElement
-    if (!canvas) return
+    const container = screenshotContainerRef.current
+    if (!container) return
 
     try {
-      const canvasElement = await html2canvas(canvas, {
+      const canvasElement = await html2canvas(container, {
         backgroundColor: null,
         scale: 2,
         useCORS: true,
         logging: false,
         allowTaint: true,
         onclone: (clonedDoc) => {
+          const clonedContainer = clonedDoc.querySelector('.screenshot-container') as HTMLElement
           const clonedCanvas = clonedDoc.querySelector('.canvas') as HTMLElement
+          const clonedPostcardBorder = clonedDoc.querySelector('.postcard-border') as HTMLElement
 
-          if (clonedCanvas) {
+          if (clonedCanvas && clonedContainer) {
             const postcardRight = clonedDoc.querySelector('.postcard-right') as HTMLElement
             
             if (postcardRight) {
@@ -372,11 +374,8 @@ function PostcardEditor() {
               wrapper.innerHTML = MADE_IN_MATTER_SVG
               clonedCanvas.appendChild(wrapper)
             }
-          }
-        
-          const clonedBorder = clonedDoc.querySelector('.postcard-border')
-          if (clonedBorder) {
-            (clonedBorder as HTMLElement).style.boxShadow = '2px 2px 8px rgba(126, 126, 190, 0.15)'
+            
+            (clonedPostcardBorder as HTMLElement).style.border = '1px solid rgba(126, 126, 190, 0.20)';
           }
         }
       })
@@ -432,58 +431,63 @@ function PostcardEditor() {
       </div>
 
       <div
-        ref={canvasRef}
-        className="canvas"
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        ref={screenshotContainerRef}
+        className="screenshot-container"
       >
-        <div className="postcard-border" style={{ backgroundImage: `url(${borderTile})` }}>
-          <div className="postcard-content">
-            <div className="postcard-left" />
-            <div className="postcard-divider" />
-            <div className="postcard-right">
+        <div
+          ref={canvasRef}
+          className="canvas"
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
+          <div className="postcard-border" style={{ backgroundImage: `url(${borderTile})` }}>
+            <div className="postcard-content">
+              <div className="postcard-left" />
+              <div className="postcard-divider" />
+              <div className="postcard-right">
 
-              <img
-                src={stampPlaceholderSrc}
-                alt="Stamp placeholder"
-                className="stamp-placeholder"
-                draggable="false"
-              />
+                <img
+                  src={stampPlaceholderSrc}
+                  alt="Stamp placeholder"
+                  className="stamp-placeholder"
+                  draggable="false"
+                />
 
-              <div className="address-lines">
-                {Array.from({ length: 4 }).map((_, index) => (
-                  <div key={index} className="address-line" />
-                ))}
+                <div className="address-lines">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index} className="address-line" />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {Object.values(widgets).map(widget => {
-          if (widget.widgetType === 'text') {
-            return (
-              <TextWidget
-                key={widget.id}
-                widget={widget}
-                isSelected={selectedWidget?.id === widget.id && selectedWidget?.type === 'text'}
-                onMouseDown={handleWidgetMouseDown}
-                onDoubleClick={handleTextDoubleClick}
-                onTextChange={handleTextChange}
-                onTextBlur={handleTextBlur}
-              />
-            )
-          } else {
-            return (
-              <StickerWidget
-                key={widget.id}
-                widget={widget}
-                isSelected={selectedWidget?.id === widget.id && selectedWidget?.type === 'sticker'}
-                onMouseDown={handleWidgetMouseDown}
-              />
-            )
-          }
-        })}
+          {Object.values(widgets).map(widget => {
+            if (widget.widgetType === 'text') {
+              return (
+                <TextWidget
+                  key={widget.id}
+                  widget={widget}
+                  isSelected={selectedWidget?.id === widget.id && selectedWidget?.type === 'text'}
+                  onMouseDown={handleWidgetMouseDown}
+                  onDoubleClick={handleTextDoubleClick}
+                  onTextChange={handleTextChange}
+                  onTextBlur={handleTextBlur}
+                />
+              )
+            } else {
+              return (
+                <StickerWidget
+                  key={widget.id}
+                  widget={widget}
+                  isSelected={selectedWidget?.id === widget.id && selectedWidget?.type === 'sticker'}
+                  onMouseDown={handleWidgetMouseDown}
+                />
+              )
+            }
+          })}
+        </div>
       </div>
       <div className="toolbar-container">
         <div className="toolbar">
