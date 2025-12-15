@@ -101,6 +101,8 @@ const stickerOptions: StickerOption[] = [
 
 function PostcardEditor() {
   const [widgets, setWidgets] = useState<Record<string, Widget>>({})
+  const [widgetsHistory, setWidgetsHistory] = useState<Record<string, Widget>[]>([{}])
+  const [historyIndex, setHistoryIndex] = useState(0)
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [selectedWidget, setSelectedWidget] = useState<SelectedWidget | null>(null)
 
@@ -163,7 +165,33 @@ function PostcardEditor() {
   }
 
   const addWidget = (widget: Widget) => {
-    setWidgets(widgets => ({ ...widgets, [widget.id]: widget }))
+    setWidgets(widgets => {
+      const newWidgets = { ...widgets, [widget.id]: widget }
+      // Save to history
+      const newHistory = widgetsHistory.slice(0, historyIndex + 1)
+      newHistory.push(newWidgets)
+      setWidgetsHistory(newHistory)
+      setHistoryIndex(newHistory.length - 1)
+      return newWidgets
+    })
+  }
+
+  const undo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1
+      setHistoryIndex(newIndex)
+      setWidgets(widgetsHistory[newIndex])
+      setSelectedWidget(null)
+    }
+  }
+
+  const redo = () => {
+    if (historyIndex < widgetsHistory.length - 1) {
+      const newIndex = historyIndex + 1
+      setHistoryIndex(newIndex)
+      setWidgets(widgetsHistory[newIndex])
+      setSelectedWidget(null)
+    }
   }
 
   const handleStickerSelect = (option: StickerOption) => {
@@ -312,6 +340,11 @@ function PostcardEditor() {
 
     setWidgets(widgets => {
       const { [selectedWidget.id]: _, ...rest } = widgets
+      // Save to history
+      const newHistory = widgetsHistory.slice(0, historyIndex + 1)
+      newHistory.push(rest)
+      setWidgetsHistory(newHistory)
+      setHistoryIndex(newHistory.length - 1)
       return rest
     })
     setSelectedWidget(null)
@@ -391,6 +424,18 @@ function PostcardEditor() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Undo (Ctrl+Z or Cmd+Z)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        undo()
+        return
+      }
+      // Check for Redo (Ctrl+Shift+Z or Cmd+Shift+Z or Ctrl+Y)
+      if (((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') || (e.ctrlKey && e.key === 'y')) {
+        e.preventDefault()
+        redo()
+        return
+      }
       // Check for Delete (Windows/Linux) or Backspace (Mac Delete key)
       if (e.key === 'Delete' || e.key === 'Backspace') {
         // Don't delete if we're editing text
@@ -411,23 +456,45 @@ function PostcardEditor() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedWidget, widgets])
+  }, [selectedWidget, widgets, historyIndex, widgetsHistory])
 
   return (
     <div className="postcard-editor">
       <div className="header">
         <h1>Postcard Builder</h1>
         <p>Create a beautiful postcard, add your message, and share it with someone special</p>
-        <button
-          type="button"
-          className="download-button"
-          onClick={handleDownload}
-          title="Download postcard"
-          aria-label="Download postcard"
-        >
-          <img src={iconDownload} alt="" className="download-icon" />
-          <span>Download</span>
-        </button>
+        <div className="header-actions">
+          <button
+            type="button"
+            className="undo-button"
+            onClick={undo}
+            disabled={historyIndex <= 0}
+            title="Undo (Ctrl+Z)"
+            aria-label="Undo"
+          >
+            ↶ Undo
+          </button>
+          <button
+            type="button"
+            className="redo-button"
+            onClick={redo}
+            disabled={historyIndex >= widgetsHistory.length - 1}
+            title="Redo (Ctrl+Shift+Z)"
+            aria-label="Redo"
+          >
+            ↷ Redo
+          </button>
+          <button
+            type="button"
+            className="download-button"
+            onClick={handleDownload}
+            title="Download postcard"
+            aria-label="Download postcard"
+          >
+            <img src={iconDownload} alt="" className="download-icon" />
+            <span>Download</span>
+          </button>
+        </div>
       </div>
 
       <div
