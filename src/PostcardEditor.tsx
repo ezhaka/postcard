@@ -484,16 +484,6 @@ function PostcardEditor() {
           >
             ↷ Redo
           </button>
-          <button
-            type="button"
-            className="download-button"
-            onClick={handleDownload}
-            title="Download postcard"
-            aria-label="Download postcard"
-          >
-            <img src={iconDownload} alt="" className="download-icon" />
-            <span>Download</span>
-          </button>
         </div>
       </div>
 
@@ -556,6 +546,18 @@ function PostcardEditor() {
           })}
         </div>
       </div>
+      
+      <button
+        type="button"
+        className="download-button"
+        onClick={handleDownload}
+        title="Download postcard"
+        aria-label="Download postcard"
+      >
+        <img src={iconDownload} alt="" className="download-icon" />
+        <span>Download</span>
+      </button>
+
       <div className="toolbar-container">
         <div className="toolbar">
           <DropdownMenu
