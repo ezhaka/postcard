@@ -3,11 +3,13 @@ import type { MouseEvent as ReactMouseEvent } from 'react'
 import html2canvas from 'html2canvas'
 import { TextWidget, type TextLabel } from './TextWidget'
 import { StickerWidget, type Sticker } from './StickerWidget'
+import { EmojiStickerWidget, type EmojiSticker } from './EmojiStickerWidget'
 import { DropdownMenu, DropdownTrigger } from './DropdownMenu'
 import stampEmpty from './assets/stamp-empty.svg'
 import iconToolbarSticker from './assets/icon-toolbar-sticker.svg'
 import iconToolbarStamp from './assets/icon-toolbar-stamp.svg'
 import iconToolbarText from './assets/icon-toolbar-text.svg'
+import iconToolbarEmoji from './assets/icon-toolbar-emoji.svg'
 import iconDownload from './assets/icon-download.svg'
 import stampChoco from './assets/stamps/stamp-choco.svg'
 import stampChristmas from './assets/stamps/stamp-christmas.svg'
@@ -31,7 +33,7 @@ import stickerThumbsup from './assets/stickers/thumbsup.svg'
 import borderTile from './assets/border-tile.svg'
 import './PostcardEditor.css'
 
-type Widget = TextLabel | Sticker
+type Widget = TextLabel | Sticker | EmojiSticker
 
 interface DragState {
   itemId: string
@@ -97,6 +99,27 @@ const stickerOptions: StickerOption[] = [
   { id: 'smiley-blessed', label: 'Smiley Blessed', src: stickerSmileyBlessed },
   { id: 'kiss', label: 'Kiss', src: stickerKiss },
   { id: 'thumbsup', label: 'Thumbs Up', src: stickerThumbsup }
+];
+
+interface EmojiOption {
+  id: string
+  label: string
+  emoji: string
+}
+
+const emojiOptions: EmojiOption[] = [
+  { id: 'smile', label: 'Smile', emoji: '😊' },
+  { id: 'heart', label: 'Heart', emoji: '❤️' },
+  { id: 'star', label: 'Star', emoji: '⭐' },
+  { id: 'fire', label: 'Fire', emoji: '🔥' },
+  { id: 'tada', label: 'Party', emoji: '🎉' },
+  { id: 'thumbs-up', label: 'Thumbs Up', emoji: '👍' },
+  { id: 'clap', label: 'Clap', emoji: '👏' },
+  { id: 'rocket', label: 'Rocket', emoji: '🚀' },
+  { id: 'sparkles', label: 'Sparkles', emoji: '✨' },
+  { id: 'sunflower', label: 'Sunflower', emoji: '🌻' },
+  { id: 'rainbow', label: 'Rainbow', emoji: '🌈' },
+  { id: 'cake', label: 'Cake', emoji: '🎂' }
 ];
 
 function PostcardEditor() {
@@ -180,6 +203,23 @@ function PostcardEditor() {
       x: constrained.x,
       y: constrained.y,
       stickerSrc: option.src
+    })
+  }
+
+  const handleEmojiSelect = (option: EmojiOption) => {
+    const bounds = getCanvasBounds()
+    if (!bounds) return
+
+    const centerX = bounds.width / 2
+    const centerY = bounds.height / 2
+    const constrained = constrainPosition(centerX, centerY, 'emoji')
+
+    addWidget({
+      id: `emoji-${Date.now()}`,
+      widgetType: 'emoji',
+      x: constrained.x,
+      y: constrained.y,
+      emoji: option.emoji
     })
   }
 
@@ -476,6 +516,15 @@ function PostcardEditor() {
                   onTextBlur={handleTextBlur}
                 />
               )
+            } else if (widget.widgetType === 'emoji') {
+              return (
+                <EmojiStickerWidget
+                  key={widget.id}
+                  widget={widget}
+                  isSelected={selectedWidget?.id === widget.id && selectedWidget?.type === 'emoji'}
+                  onMouseDown={handleWidgetMouseDown}
+                />
+              )
             } else {
               return (
                 <StickerWidget
@@ -552,6 +601,27 @@ function PostcardEditor() {
                 iconSrc={iconToolbarSticker}
                 title="Add sticker"
                 ariaLabel="Add sticker"
+              />
+            )}
+          />
+          <DropdownMenu
+            className="emoji-picker"
+            items={emojiOptions}
+            onItemSelect={handleEmojiSelect}
+            gridColumns={4}
+            gap="0"
+            renderItem={(option) => (
+              <button type="button" className="emoji-option" aria-label={option.label} style={{ fontSize: '32px', padding: '8px' }}>
+                {option.emoji}
+              </button>
+            )}
+            trigger={(isOpen, toggleOpen) => (
+              <DropdownTrigger
+                isOpen={isOpen}
+                toggleOpen={toggleOpen}
+                iconSrc={iconToolbarEmoji}
+                title="Add emoji"
+                ariaLabel="Add emoji"
               />
             )}
           />

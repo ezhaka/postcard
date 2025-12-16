@@ -232,6 +232,18 @@
   user-select: none;
 }
 
+.emoji-sticker {
+  pointer-events: none;
+  user-select: none;
+  line-height: 1;
+}
+
+.emoji-sticker img {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
 .toolbar-container {
   position: fixed;
   display: flex;
@@ -382,6 +394,30 @@
   height: 100%;
   display: block;
   object-fit: contain;
+}
+
+/* Emoji picker specific styles */
+.emoji-picker {
+  position: static;
+}
+
+.emoji-option {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, border 0.2s ease;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  min-width: 50px;
+  min-height: 50px;
+}
+
+.emoji-option:hover {
+  border: 1px dashed rgba(126, 126, 190, 0.40);
+  background: rgba(126, 126, 190, 0.05);
 }
 
 .footer {
