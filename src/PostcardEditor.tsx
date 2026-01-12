@@ -103,6 +103,7 @@ function PostcardEditor() {
   const [widgets, setWidgets] = useState<Record<string, Widget>>({})
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [selectedWidget, setSelectedWidget] = useState<SelectedWidget | null>(null)
+  const [textColor, setTextColor] = useState('#3B3B50')
 
   const [stampPlaceholderSrc, setStampPlaceholderSrc] = useState(stampEmpty)
 
@@ -198,7 +199,8 @@ function PostcardEditor() {
       y: constrained.y,
       text: option.sampleText,
       isEditing: false,
-      fontFamily: option.family
+      fontFamily: option.family,
+      color: textColor
     })
   }
 
@@ -263,6 +265,20 @@ function PostcardEditor() {
         ...widgets,
         [labelId]: { ...widget, text: newText }
       }))
+    }
+  }
+
+  const handleColorChange = (color: string) => {
+    setTextColor(color)
+    // Update selected text widget color if any
+    if (selectedWidget && selectedWidget.type === 'text') {
+      const widget = widgets[selectedWidget.id]
+      if (widget && widget.widgetType === 'text') {
+        setWidgets(widgets => ({
+          ...widgets,
+          [selectedWidget.id]: { ...widget, color }
+        }))
+      }
     }
   }
 
@@ -491,6 +507,14 @@ function PostcardEditor() {
       </div>
       <div className="toolbar-container">
         <div className="toolbar">
+          <input
+            type="color"
+            value={textColor}
+            onChange={(e) => handleColorChange(e.target.value)}
+            className="color-picker"
+            title="Text color"
+            aria-label="Text color picker"
+          />
           <DropdownMenu
             className="font-picker"
             items={fontOptions}

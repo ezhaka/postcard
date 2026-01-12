@@ -9,6 +9,7 @@ export interface TextLabel {
   text: string
   isEditing: boolean
   fontFamily: string
+  color: string
 }
 
 interface TextWidgetProps {
@@ -96,7 +97,8 @@ export function TextWidget({
         onKeyDown={handleKeyDown}
         style={{
           whiteSpace: 'pre',
-          outline: 'none'
+          outline: 'none',
+          color: widget.color
         }}
       />
     </div>
