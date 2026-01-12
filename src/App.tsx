@@ -1,7 +1,7 @@
-import PostcardEditor from './PostcardEditor'
+import { SchedulingApp } from './components/scheduling/SchedulingApp'
 
 function App() {
-  return <PostcardEditor />
+  return <SchedulingApp />
 }
 
 export default App
