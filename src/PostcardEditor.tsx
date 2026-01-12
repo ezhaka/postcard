@@ -184,6 +184,19 @@ function PostcardEditor() {
   }
 
   const handleFontOptionSelect = (option: FontOption) => {
+    // If a text widget is selected, change its font
+    if (selectedWidget && selectedWidget.type === 'text') {
+      const widget = widgets[selectedWidget.id]
+      if (widget && widget.widgetType === 'text') {
+        setWidgets(widgets => ({
+          ...widgets,
+          [selectedWidget.id]: { ...widget, fontFamily: option.family }
+        }))
+      }
+      return
+    }
+
+    // Otherwise, create a new text widget
     const bounds = getCanvasBounds()
     if (!bounds) return
 
@@ -497,13 +510,25 @@ function PostcardEditor() {
             onItemSelect={handleFontOptionSelect}
             gridColumns={3}
             gap="0"
-            renderItem={(option) => (
-              <button type="button" className="font-dropdown-item">
-                <span className="font-option-name" style={{ fontFamily: option.family }}>
-                  {option.sampleText}
-                </span>
-              </button>
-            )}
+            renderItem={(option) => {
+              // Check if this font is currently selected
+              const isCurrentFont = selectedWidget && 
+                selectedWidget.type === 'text' && 
+                widgets[selectedWidget.id] && 
+                widgets[selectedWidget.id].widgetType === 'text' &&
+                (widgets[selectedWidget.id] as TextLabel).fontFamily === option.family
+              
+              return (
+                <button 
+                  type="button" 
+                  className={`font-dropdown-item ${isCurrentFont ? 'active' : ''}`}
+                >
+                  <span className="font-option-name" style={{ fontFamily: option.family }}>
+                    {option.sampleText}
+                  </span>
+                </button>
+              )
+            }}
             trigger={(isOpen, toggleOpen) => (
               <DropdownTrigger
                 isOpen={isOpen}

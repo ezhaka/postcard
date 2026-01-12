@@ -316,14 +316,19 @@
   text-align: center;
   justify-content: center;
   align-items: center;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, border 0.2s ease;
   border: 1px solid transparent;
+  border-radius: 10px;
 }
 
 .font-dropdown-item:hover {
-  border-radius: 10px;
   border: 1px dashed rgba(126, 126, 190, 0.40);
   background: rgba(126, 126, 190, 0.05);
+}
+
+.font-dropdown-item.active {
+  border: 1px solid rgba(126, 126, 190, 1);
+  background: rgba(126, 126, 190, 0.1);
 }
 
 .font-option-name {
