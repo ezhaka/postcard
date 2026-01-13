@@ -276,6 +276,16 @@ function PostcardEditor() {
     }
   }
 
+  const handleTextResize = (labelId: string, width: number, height: number) => {
+    const widget = widgets[labelId]
+    if (widget && widget.widgetType === 'text') {
+      setWidgets(widgets => ({
+        ...widgets,
+        [labelId]: { ...widget, width, height }
+      }))
+    }
+  }
+
 
   // Handle clicks outside the canvas to deselect
   useEffect(() => {
@@ -474,6 +484,7 @@ function PostcardEditor() {
                   onDoubleClick={handleTextDoubleClick}
                   onTextChange={handleTextChange}
                   onTextBlur={handleTextBlur}
+                  onResize={handleTextResize}
                 />
               )
             } else {
