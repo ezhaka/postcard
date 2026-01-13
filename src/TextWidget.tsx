@@ -9,6 +9,8 @@ export interface TextLabel {
   text: string
   isEditing: boolean
   fontFamily: string
+  width?: number
+  height?: number
 }
 
 interface TextWidgetProps {
@@ -18,6 +20,7 @@ interface TextWidgetProps {
   onDoubleClick: (id: string) => void
   onTextChange: (id: string, newText: string) => void
   onTextBlur: (id: string) => void
+  onResize?: (id: string, width: number, height: number) => void
 }
 
 export function TextWidget({
@@ -26,9 +29,11 @@ export function TextWidget({
   onMouseDown,
   onDoubleClick,
   onTextChange,
-  onTextBlur
+  onTextBlur,
+  onResize
 }: TextWidgetProps) {
   const spanRef = useRef<HTMLSpanElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (widget.isEditing && spanRef.current) {
@@ -73,8 +78,53 @@ export function TextWidget({
     }
   }
 
+  const handleResizeMouseDown = (e: ReactMouseEvent<HTMLDivElement>, direction: 'se' | 'ne' | 'sw' | 'nw') => {
+    e.stopPropagation()
+    e.preventDefault()
+
+    const startX = e.clientX
+    const startY = e.clientY
+    const startWidth = widget.width || containerRef.current?.offsetWidth || 200
+    const startHeight = widget.height || containerRef.current?.offsetHeight || 60
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - startX
+      const deltaY = moveEvent.clientY - startY
+
+      let newWidth = startWidth
+      let newHeight = startHeight
+
+      if (direction === 'se') {
+        newWidth = Math.max(50, startWidth + deltaX)
+        newHeight = Math.max(30, startHeight + deltaY)
+      } else if (direction === 'ne') {
+        newWidth = Math.max(50, startWidth + deltaX)
+        newHeight = Math.max(30, startHeight - deltaY)
+      } else if (direction === 'sw') {
+        newWidth = Math.max(50, startWidth - deltaX)
+        newHeight = Math.max(30, startHeight + deltaY)
+      } else if (direction === 'nw') {
+        newWidth = Math.max(50, startWidth - deltaX)
+        newHeight = Math.max(30, startHeight - deltaY)
+      }
+
+      if (onResize) {
+        onResize(widget.id, newWidth, newHeight)
+      }
+    }
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }
+
   return (
     <div
+      ref={containerRef}
       key={widget.id}
       data-widget-id={widget.id}
       className={`text-label ${widget.fontFamily === 'Great Vibes' ? 'font-great-vibes' : ''} ${isSelected ? 'selected' : ''}`}
@@ -82,7 +132,10 @@ export function TextWidget({
         left: widget.x,
         top: widget.y,
         transform: 'translate(-50%, -50%)',
-        fontFamily: widget.fontFamily
+        fontFamily: widget.fontFamily,
+        width: widget.width ? `${widget.width}px` : 'fit-content',
+        height: widget.height ? `${widget.height}px` : 'auto',
+        overflow: 'hidden'
       }}
       onMouseDown={(e) => onMouseDown(e, widget)}
       onDoubleClick={() => onDoubleClick(widget.id)}
@@ -95,10 +148,34 @@ export function TextWidget({
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         style={{
-          whiteSpace: 'pre',
-          outline: 'none'
+          whiteSpace: widget.width ? 'pre-wrap' : 'pre',
+          outline: 'none',
+          wordWrap: 'break-word',
+          width: '100%',
+          height: '100%',
+          display: 'block'
         }}
       />
+      {isSelected && !widget.isEditing && (
+        <>
+          <div 
+            className="resize-handle resize-handle-se"
+            onMouseDown={(e) => handleResizeMouseDown(e, 'se')}
+          />
+          <div 
+            className="resize-handle resize-handle-ne"
+            onMouseDown={(e) => handleResizeMouseDown(e, 'ne')}
+          />
+          <div 
+            className="resize-handle resize-handle-sw"
+            onMouseDown={(e) => handleResizeMouseDown(e, 'sw')}
+          />
+          <div 
+            className="resize-handle resize-handle-nw"
+            onMouseDown={(e) => handleResizeMouseDown(e, 'nw')}
+          />
+        </>
+      )}
     </div>
   )
 }
