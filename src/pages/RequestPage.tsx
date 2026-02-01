@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { categories } from '../data/mockData';
 import type { SubmissionRequest } from '../types';
+import Disclaimer from '../components/Disclaimer';
 
 export default function RequestPage() {
   const navigate = useNavigate();
@@ -136,6 +137,8 @@ export default function RequestPage() {
           Submit Request
         </button>
       </form>
+
+      <Disclaimer />
     </div>
   );
 }

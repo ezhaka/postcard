@@ -1,15 +1,17 @@
 import { useState, useMemo } from 'react';
-import { companies, categories, releases, getCompaniesByRelease } from '../data/mockData';
+import { companies, categories, releases, getCompaniesByRelease, communityMetadata } from '../data/mockData';
 import type { Company, Release } from '../types';
 import { Link } from 'react-router-dom';
+import Disclaimer from '../components/Disclaimer';
 
 export default function DirectoryPage() {
   const [selectedRelease, setSelectedRelease] = useState<Release>(releases[releases.length - 1]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [includeCommunity, setIncludeCommunity] = useState(false);
 
   const filteredCompanies = useMemo(() => {
-    let result = getCompaniesByRelease(selectedRelease.id);
+    let result = getCompaniesByRelease(selectedRelease.id, includeCommunity);
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -24,13 +26,38 @@ export default function DirectoryPage() {
     }
 
     return result.sort((a, b) => a.name.localeCompare(b.name));
-  }, [selectedRelease, searchQuery, selectedCategory]);
+  }, [selectedRelease, searchQuery, selectedCategory, includeCommunity]);
 
   return (
     <div className="directory-page">
       <header className="directory-header">
         <h1>Sponsor Directory</h1>
         <p className="subtitle">Searchable directory of sponsor companies</p>
+        
+        <div className="data-sources">
+          <div className="source-info">
+            <span className="source-label">Official data:</span>
+            <span className="source-value">As at {selectedRelease.displayName}</span>
+          </div>
+          <div className="source-info">
+            <span className="source-label">Community updates:</span>
+            <span className="source-value">Last updated {new Date(communityMetadata.lastUpdated).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+          </div>
+        </div>
+
+        <div className="community-toggle">
+          <label className="toggle-label">
+            <input
+              type="checkbox"
+              checked={includeCommunity}
+              onChange={(e) => setIncludeCommunity(e.target.checked)}
+            />
+            <span>Include community additions</span>
+          </label>
+          <p className="toggle-hint">
+            {includeCommunity ? '✓ Showing official list + community submissions' : '✓ Show official list only (default)'}
+          </p>
+        </div>
       </header>
 
       <div className="controls-section">
@@ -94,7 +121,23 @@ export default function DirectoryPage() {
             key={company.id} 
             className="company-card"
           >
-            <h3>{company.name}</h3>
+            <div className="card-header">
+              <h3>{company.name}</h3>
+              <div className="badges">
+                {company.source === 'official' ? (
+                  <span className="badge badge-official">Official</span>
+                ) : (
+                  <>
+                    <span className="badge badge-community">Community</span>
+                    {company.verified ? (
+                      <span className="badge badge-verified">Verified</span>
+                    ) : (
+                      <span className="badge badge-unverified">Unverified</span>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
             <p className="category">{company.category}</p>
             <a 
               href={company.website} 
@@ -108,6 +151,8 @@ export default function DirectoryPage() {
           </Link>
         ))}
       </div>
+
+      <Disclaimer />
     </div>
   );
 }

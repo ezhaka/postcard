@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { getCompanyById, getCompanyReleaseHistory, releases } from '../data/mockData';
+import Disclaimer from '../components/Disclaimer';
 
 export default function CompanyDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +26,21 @@ export default function CompanyDetailPage() {
       </header>
 
       <div className="company-details">
+        <div className="badges-row">
+          {company.source === 'official' ? (
+            <span className="badge badge-official">Official</span>
+          ) : (
+            <>
+              <span className="badge badge-community">Community Submission</span>
+              {company.verified ? (
+                <span className="badge badge-verified">Verified</span>
+              ) : (
+                <span className="badge badge-unverified">Unverified</span>
+              )}
+            </>
+          )}
+        </div>
+
         <div className="detail-row">
           <label>Category:</label>
           <span>{company.category}</span>
@@ -35,6 +51,29 @@ export default function CompanyDetailPage() {
             {company.website}
           </a>
         </div>
+      </div>
+
+      <div className="sources-section">
+        <h2>Sources</h2>
+        {company.source === 'official' ? (
+          <div className="source-item">
+            <p>
+              <strong>Official source:</strong> Home Affairs list (as at 15 Jan 2025)
+            </p>
+          </div>
+        ) : (
+          <div className="source-item">
+            <p>
+              <strong>Community:</strong> Submitted {company.submittedAt ? new Date(company.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
+              {company.verified && company.verifiedAt && (
+                <> • Verified {new Date(company.verifiedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</>
+              )}
+              {company.evidenceLink && (
+                <> • <a href={company.evidenceLink} target="_blank" rel="noopener noreferrer">Evidence</a></>
+              )}
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="release-history">
@@ -60,6 +99,8 @@ export default function CompanyDetailPage() {
           })}
         </div>
       </div>
+
+      <Disclaimer />
     </div>
   );
 }

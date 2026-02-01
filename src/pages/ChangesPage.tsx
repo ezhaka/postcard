@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { releases, getAddedCompanies, getRemovedCompanies } from '../data/mockData';
 import type { Release, Company } from '../types';
 import { Link } from 'react-router-dom';
+import Disclaimer from '../components/Disclaimer';
 
 export default function ChangesPage() {
   const [selectedRelease, setSelectedRelease] = useState<Release>(releases[releases.length - 1]);
@@ -54,7 +55,23 @@ export default function ChangesPage() {
               <div className="companies-list">
                 {addedCompanies.map(company => (
                   <Link to={`/company/${company.id}`} key={company.id} className="company-card added">
-                    <h3>{company.name}</h3>
+                    <div className="card-header">
+                      <h3>{company.name}</h3>
+                      <div className="badges">
+                        {company.source === 'official' ? (
+                          <span className="badge badge-official">Official</span>
+                        ) : (
+                          <>
+                            <span className="badge badge-community">Community</span>
+                            {company.verified ? (
+                              <span className="badge badge-verified">Verified</span>
+                            ) : (
+                              <span className="badge badge-unverified">Unverified</span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
                     <p className="category">{company.category}</p>
                     <a 
                       href={company.website}
@@ -79,7 +96,23 @@ export default function ChangesPage() {
               <div className="companies-list">
                 {removedCompanies.map(company => (
                   <Link to={`/company/${company.id}`} key={company.id} className="company-card removed">
-                    <h3>{company.name}</h3>
+                    <div className="card-header">
+                      <h3>{company.name}</h3>
+                      <div className="badges">
+                        {company.source === 'official' ? (
+                          <span className="badge badge-official">Official</span>
+                        ) : (
+                          <>
+                            <span className="badge badge-community">Community</span>
+                            {company.verified ? (
+                              <span className="badge badge-verified">Verified</span>
+                            ) : (
+                              <span className="badge badge-unverified">Unverified</span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
                     <p className="category">{company.category}</p>
                     <a 
                       href={company.website}
@@ -101,6 +134,8 @@ export default function ChangesPage() {
       ) : (
         <p className="no-previous">This is the first release. No previous data to compare.</p>
       )}
+
+      <Disclaimer />
     </div>
   );
 }
