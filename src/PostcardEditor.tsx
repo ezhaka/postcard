@@ -9,6 +9,7 @@ import iconToolbarSticker from './assets/icon-toolbar-sticker.svg'
 import iconToolbarStamp from './assets/icon-toolbar-stamp.svg'
 import iconToolbarText from './assets/icon-toolbar-text.svg'
 import iconDownload from './assets/icon-download.svg'
+import iconToolbarPencil from './assets/icon-toolbar-pencil.svg'
 import stampChoco from './assets/stamps/stamp-choco.svg'
 import stampChristmas from './assets/stamps/stamp-christmas.svg'
 import stampCloud from './assets/stamps/stamp-cloud.svg'
@@ -47,6 +48,19 @@ interface SelectedWidget {
   id: string
   type: Widget['widgetType']
 }
+
+interface StrokeWidthOption {
+  id: string
+  label: string
+  value: number
+}
+
+const strokeWidthOptions: StrokeWidthOption[] = [
+  { id: 'none', label: 'None', value: 0 },
+  { id: 'thin', label: 'Thin', value: 8 },
+  { id: 'medium', label: 'Medium', value: 14 },
+  { id: 'thick', label: 'Thick', value: 22 },
+]
 
 interface FontOption {
   id: string
@@ -105,6 +119,7 @@ function PostcardEditor() {
   const [selectedWidget, setSelectedWidget] = useState<SelectedWidget | null>(null)
 
   const [stampPlaceholderSrc, setStampPlaceholderSrc] = useState(stampEmpty)
+  const [strokeWidth, setStrokeWidth] = useState(14)
 
   const canvasRef = useRef<HTMLDivElement>(null)
   const screenshotContainerRef = useRef<HTMLDivElement>(null)
@@ -204,6 +219,10 @@ function PostcardEditor() {
 
   const handleStampSelect = (option: StampOption) => {
     setStampPlaceholderSrc(option.src)
+  }
+
+  const handleStrokeWidthSelect = (option: StrokeWidthOption) => {
+    setStrokeWidth(option.value)
   }
 
   const handleWidgetMouseDown = (e: ReactMouseEvent<HTMLDivElement>, widget: Widget) => {
@@ -441,7 +460,13 @@ function PostcardEditor() {
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
         >
-          <div className="postcard-border" style={{ backgroundImage: `url(${borderTile})` }}>
+          <div
+            className="postcard-border"
+            style={{
+              backgroundImage: strokeWidth > 0 ? `url(${borderTile})` : 'none',
+              padding: `${strokeWidth}px`
+            }}
+          >
             <div className="postcard-content">
               <div className="postcard-left" />
               <div className="postcard-divider" />
@@ -491,6 +516,33 @@ function PostcardEditor() {
       </div>
       <div className="toolbar-container">
         <div className="toolbar">
+          <DropdownMenu
+            className="stroke-picker"
+            items={strokeWidthOptions}
+            onItemSelect={handleStrokeWidthSelect}
+            gridColumns={4}
+            gap="0.5rem"
+            renderItem={(option) => (
+              <button
+                type="button"
+                className={`stroke-width-option ${strokeWidth === option.value ? 'selected' : ''}`}
+                aria-label={option.label}
+                title={option.label}
+              >
+                <span className="stroke-width-preview" style={{ borderWidth: option.value === 0 ? 0 : Math.max(2, Math.round(option.value / 4)) }} />
+                <span className="stroke-width-label">{option.label}</span>
+              </button>
+            )}
+            trigger={(isOpen, toggleOpen) => (
+              <DropdownTrigger
+                isOpen={isOpen}
+                toggleOpen={toggleOpen}
+                iconSrc={iconToolbarPencil}
+                title="Border width"
+                ariaLabel="Change border width"
+              />
+            )}
+          />
           <DropdownMenu
             className="font-picker"
             items={fontOptions}
