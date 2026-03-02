@@ -384,6 +384,54 @@
   object-fit: contain;
 }
 
+/* Stroke width picker styles */
+.stroke-picker {
+  position: static;
+}
+
+.stroke-width-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  width: 64px;
+  transition: background 0.2s ease, border 0.2s ease;
+}
+
+.stroke-width-option:hover {
+  border: 1px dashed rgba(126, 126, 190, 0.40);
+  background: rgba(126, 126, 190, 0.05);
+}
+
+.stroke-width-option.selected {
+  border: 1px solid rgba(126, 126, 190, 0.6);
+  background: rgba(126, 126, 190, 0.08);
+}
+
+.stroke-width-preview {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  border-style: solid;
+  border-color: rgba(126, 126, 190, 0.7);
+  background: rgba(126, 126, 190, 0.07);
+  box-sizing: border-box;
+}
+
+.stroke-width-label {
+  font-size: 0.7rem;
+  color: rgba(126, 126, 190, 0.9);
+  font-weight: 500;
+  text-align: center;
+}
+
 .footer {
   display: flex;
   justify-content: center;
